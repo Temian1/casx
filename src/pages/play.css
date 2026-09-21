@@ -1,0 +1,13 @@
+.play { min-height: 100vh; }
+.play-bar {
+  position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  padding: 10px 16px; background: rgba(7,4,15,.85); backdrop-filter: blur(8px); border-bottom: 1px solid var(--edge);
+}
+.play-back { text-decoration: none; font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--cy); }
+.play-back:hover { color: #fff; }
+.play-name { font-size: 11px; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; color: var(--mute); }
+.play-audio { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+.play-vol { display: flex; align-items: center; gap: 8px; border: 2px solid var(--edge); background: var(--panel); border-radius: 10px; padding: 6px 12px; }
+.play-vol span { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
+.play-vol input { width: 90px; }
+.play-loading { text-align: center; padding: 60px 16px; color: var(--mute); letter-spacing: .2em; text-transform: uppercase; font-size: 12px; }

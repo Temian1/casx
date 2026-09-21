@@ -1,0 +1,1393 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Dopamine Bonanza</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bungee&family=Archivo:wght@400;600;800&family=IBM+Plex+Mono:wght@500;700&display=swap">
+<style>
+  :root{
+    --ink:#07040F;
+    --panel:#150C28;
+    --panel-2:#1E1238;
+    --edge:#3A2465;
+    --mag:#FF2D87;
+    --cy:#29E8DE;
+    --lime:#B8FF3C;
+    --gold:#FFC63B;
+    --txt:#EFE7FF;
+    --mute:#9B8AC4;
+    --r:14px;
+    color-scheme:dark;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:
+      radial-gradient(120% 80% at 50% -10%, #2A1252 0%, rgba(42,18,82,0) 60%),
+      radial-gradient(90% 60% at 50% 110%, #3D0E3A 0%, rgba(61,14,58,0) 60%),
+      var(--ink);
+    color:var(--txt);
+    font-family:Archivo,"Helvetica Neue",Arial,sans-serif;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  .wrap{
+    max-width:1080px;margin:0 auto;
+    padding-inline:16px;padding-block:18px 28px;
+    display:flex;flex-direction:column;gap:14px;
+  }
+
+  /* ---------- logo ---------- */
+  .logo{text-align:center;line-height:1;position:relative}
+  .logo h1{
+    font-family:Bungee,Impact,sans-serif;
+    margin:0;font-size:clamp(28px,7.4vw,58px);
+    letter-spacing:.01em;text-wrap:balance;
+    background:linear-gradient(180deg,#FFF 0%,var(--gold) 42%,var(--mag) 100%);
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 14px rgba(255,45,135,.55)) drop-shadow(0 3px 0 rgba(0,0,0,.6));
+  }
+  .logo .sub{
+    font-size:11px;letter-spacing:.34em;text-transform:uppercase;
+    color:var(--cy);margin-top:6px;opacity:.85;
+  }
+
+  /* ---------- layout ---------- */
+  .stage{display:grid;grid-template-columns:168px minmax(0,1fr);gap:14px;align-items:start}
+  @media (max-width:760px){ .stage{grid-template-columns:1fr} }
+
+  /* ---------- left rail ---------- */
+  .rail{display:flex;flex-direction:column;gap:10px}
+  @media (max-width:760px){ .rail{flex-direction:row;flex-wrap:wrap} .rail>*{flex:1 1 150px} }
+
+  .buy{
+    border:2px solid var(--edge);border-radius:var(--r);
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    color:var(--txt);padding:10px 12px;cursor:pointer;text-align:left;
+    display:flex;flex-direction:column;gap:3px;font-family:inherit;
+    transition:transform .12s ease, box-shadow .12s ease, border-color .12s ease;
+  }
+  .buy b{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:800}
+  .buy .amt{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
+  .buy.fs{border-color:#6A2E7A} .buy.fs .amt{color:var(--mag)}
+  .buy.sfs{border-color:#7A5C1E} .buy.sfs .amt{color:var(--gold)}
+  .buy:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(255,45,135,.22)}
+  .buy:disabled{opacity:.4;cursor:not-allowed}
+
+  .ante{
+    border:2px solid var(--edge);border-radius:var(--r);
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));
+    padding:10px 12px;display:flex;flex-direction:column;gap:6px;
+  }
+  .ante .hd{font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute);font-weight:800}
+  .ante .row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+  .ante .cost{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:15px;font-variant-numeric:tabular-nums;color:var(--cy)}
+  .sw{
+    width:52px;height:27px;border-radius:99px;border:2px solid var(--edge);
+    background:#0D0720;position:relative;cursor:pointer;padding:0;flex:none;
+    transition:background .16s ease,border-color .16s ease;
+  }
+  .sw::after{
+    content:"";position:absolute;top:2px;left:2px;width:19px;height:19px;border-radius:50%;
+    background:var(--mute);transition:transform .16s ease,background .16s ease;
+  }
+  .sw[aria-checked="true"]{background:rgba(41,232,222,.16);border-color:var(--cy)}
+  .sw[aria-checked="true"]::after{transform:translateX(25px);background:var(--cy)}
+
+  .tiny{font-size:11px;color:var(--mute);line-height:1.45}
+
+  /* ---------- reel frame ---------- */
+  .frame{
+    position:relative;border-radius:20px;padding:10px;
+    background:linear-gradient(180deg,#43206E,#2A1049);
+    box-shadow:0 0 0 2px #120A24, 0 0 34px rgba(255,45,135,.28), inset 0 0 0 2px rgba(255,255,255,.07);
+  }
+  .grid{
+    position:relative;display:grid;grid-template-columns:repeat(6,1fr);gap:2px;
+    aspect-ratio:6/5;border-radius:12px;overflow:hidden;
+    background:
+      repeating-linear-gradient(90deg, rgba(255,255,255,.045) 0 calc(100%/6 - 2px), rgba(0,0,0,0) calc(100%/6 - 2px) calc(100%/6)),
+      linear-gradient(180deg,#160D2B,#0C0719);
+  }
+  .col{display:grid;grid-template-rows:repeat(5,1fr);gap:2px;min-width:0}
+  .cell{position:relative;display:grid;place-items:center;min-width:0;min-height:0}
+  .cell svg{width:86%;height:86%;max-width:100%;display:block;filter:drop-shadow(0 3px 5px rgba(0,0,0,.6))}
+  .cell.drop{animation:drop .30s cubic-bezier(.2,.9,.3,1.25) backwards}
+  @keyframes drop{from{transform:translateY(-260%);opacity:.15}to{transform:none;opacity:1}}
+  .cell.blur svg{filter:blur(2.4px) drop-shadow(0 3px 5px rgba(0,0,0,.6));opacity:.9}
+  .cell.win::before{
+    content:"";position:absolute;inset:4%;border-radius:12px;
+    background:radial-gradient(circle,rgba(184,255,60,.42),rgba(184,255,60,0) 68%);
+    animation:pulse .46s ease-in-out infinite alternate;
+  }
+  @keyframes pulse{from{transform:scale(.86);opacity:.5}to{transform:scale(1.1);opacity:1}}
+  .cell.pop svg{animation:pop .24s ease-in forwards}
+  @keyframes pop{to{transform:scale(1.5) rotate(9deg);opacity:0}}
+  .cell.scat svg{animation:scat .7s ease-in-out infinite alternate}
+  @keyframes scat{from{transform:scale(1)}to{transform:scale(1.09)}}
+
+  /* multiplier orb */
+  .orb{position:absolute;inset:8%;display:grid;place-items:center;border-radius:50%;
+    background:radial-gradient(circle at 34% 30%,#FFF1C4,#FF8A1E 46%,#B32C00 100%);
+    box-shadow:0 0 18px rgba(255,170,40,.8), inset 0 -4px 8px rgba(0,0,0,.4);
+    font-family:Bungee,Impact,sans-serif;color:#3A1000;
+    font-size:clamp(9px,1.9vw,19px);text-shadow:0 1px 0 rgba(255,255,255,.45);
+    animation:orbIn .3s cubic-bezier(.2,.9,.3,1.4) backwards;
+  }
+  @keyframes orbIn{from{transform:scale(.2);opacity:0}to{transform:none;opacity:1}}
+
+  /* overlays */
+  .flash{
+    position:absolute;inset:10px;border-radius:12px;display:grid;place-items:center;
+    pointer-events:none;text-align:center;padding:16px;
+  }
+  .flash.dim{background:rgba(7,4,15,.82);backdrop-filter:blur(3px)}
+  .flash h2{
+    font-family:Bungee,Impact,sans-serif;margin:0;
+    font-size:clamp(22px,5.4vw,46px);line-height:1.06;text-wrap:balance;
+    background:linear-gradient(180deg,#FFF,var(--gold) 55%,var(--mag));
+    -webkit-background-clip:text;background-clip:text;color:transparent;
+    filter:drop-shadow(0 0 16px rgba(255,198,59,.6));
+  }
+  .flash p{margin:8px 0 0;color:var(--cy);font-size:13px;letter-spacing:.2em;text-transform:uppercase}
+  .flash .big{
+    font-family:"IBM Plex Mono",monospace;font-weight:700;color:var(--lime);
+    font-size:clamp(20px,5vw,40px);margin-top:10px;font-variant-numeric:tabular-nums;
+    text-shadow:0 0 20px rgba(184,255,60,.6);
+  }
+  .winbar{
+    position:absolute;left:50%;bottom:18px;transform:translateX(-50%);
+    background:rgba(7,4,15,.9);border:2px solid var(--lime);border-radius:99px;
+    padding:6px 20px;font-family:"IBM Plex Mono",monospace;font-weight:700;
+    color:var(--lime);font-size:clamp(13px,2.6vw,20px);white-space:nowrap;
+    font-variant-numeric:tabular-nums;box-shadow:0 0 26px rgba(184,255,60,.4);
+  }
+  .fsbadge{
+    position:absolute;top:18px;left:50%;transform:translateX(-50%);
+    background:linear-gradient(180deg,#6A1E5C,#3A0E34);border:2px solid var(--mag);
+    border-radius:99px;padding:5px 16px;font-size:11px;font-weight:800;
+    letter-spacing:.18em;text-transform:uppercase;color:#FFD9EC;white-space:nowrap;
+    box-shadow:0 0 22px rgba(255,45,135,.5);
+  }
+  .totmult{
+    position:absolute;top:18px;right:18px;
+    background:linear-gradient(180deg,#8A5A0E,#4A2E05);border:2px solid var(--gold);
+    border-radius:10px;padding:5px 12px;font-family:Bungee,Impact,sans-serif;
+    color:#FFE9B0;font-size:clamp(12px,2.4vw,18px);
+    box-shadow:0 0 22px rgba(255,198,59,.45);
+  }
+
+  /* ---------- bottom bar ---------- */
+  .bar{
+    display:grid;grid-template-columns:1fr auto 1fr;gap:12px;align-items:center;
+    border:2px solid var(--edge);border-radius:var(--r);
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));padding:12px 14px;
+  }
+  @media (max-width:620px){ .bar{grid-template-columns:1fr 1fr;grid-template-areas:"cr bet" "spin spin";row-gap:14px}
+    .bar .meters{grid-area:cr} .bar .betbox{grid-area:bet;justify-self:end} .bar .spinwrap{grid-area:spin;justify-self:center} }
+  .meters{display:flex;gap:18px;flex-wrap:wrap}
+  .meter .k{font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);font-weight:800}
+  .meter .v{font-family:"IBM Plex Mono",monospace;font-weight:700;font-size:clamp(15px,2.6vw,21px);font-variant-numeric:tabular-nums}
+  .meter .v.credit{color:var(--lime)}
+  .meter .v.won{color:var(--gold)}
+
+  .spinwrap{display:flex;align-items:center;gap:10px}
+  .spin{
+    width:78px;height:78px;border-radius:50%;border:3px solid var(--cy);cursor:pointer;
+    background:radial-gradient(circle at 34% 28%,#2B6E7A,#0E2B33 70%);
+    color:var(--cy);display:grid;place-items:center;font-family:inherit;
+    box-shadow:0 0 26px rgba(41,232,222,.4), inset 0 0 18px rgba(41,232,222,.16);
+    transition:transform .12s ease, box-shadow .12s ease;
+  }
+  .spin:hover:not(:disabled){transform:scale(1.05);box-shadow:0 0 38px rgba(41,232,222,.6)}
+  .spin:active:not(:disabled){transform:scale(.96)}
+  .spin:disabled{opacity:.45;cursor:not-allowed}
+  .spin svg{width:34px;height:34px}
+  .spin.busy svg{animation:rot 1s linear infinite}
+  @keyframes rot{to{transform:rotate(360deg)}}
+
+  .betbox{display:flex;align-items:center;gap:8px;justify-self:end}
+  .step{
+    width:34px;height:34px;border-radius:50%;border:2px solid var(--edge);
+    background:var(--panel);color:var(--txt);font-size:19px;line-height:1;cursor:pointer;
+    font-family:inherit;display:grid;place-items:center;transition:border-color .12s ease,color .12s ease;
+  }
+  .step:hover:not(:disabled){border-color:var(--cy);color:var(--cy)}
+  .step:disabled{opacity:.35;cursor:not-allowed}
+
+  .ghost{
+    border:2px solid var(--edge);background:var(--panel);color:var(--mute);
+    border-radius:10px;padding:8px 12px;font-family:inherit;font-size:11px;font-weight:800;
+    letter-spacing:.12em;text-transform:uppercase;cursor:pointer;
+    transition:border-color .12s ease,color .12s ease;
+  }
+  .ghost:hover:not(:disabled){border-color:var(--cy);color:var(--cy)}
+  .ghost[aria-pressed="true"]{border-color:var(--mag);color:var(--mag)}
+  .ghost:disabled{opacity:.4;cursor:not-allowed}
+  .utils{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;align-items:center}
+  .volwrap{
+    display:flex;align-items:center;gap:8px;
+    border:2px solid var(--edge);background:var(--panel);border-radius:10px;padding:6px 12px;
+  }
+  .volwrap label{font-size:11px;font-weight:800;letter-spacing:.12em;text-transform:uppercase;color:var(--mute)}
+  input[type=range]{
+    -webkit-appearance:none;appearance:none;width:96px;height:4px;border-radius:99px;
+    background:linear-gradient(90deg,var(--cy),var(--mag));outline:none;margin:0;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;width:15px;height:15px;border-radius:50%;
+    background:var(--txt);border:2px solid var(--cy);cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:15px;height:15px;border-radius:50%;
+    background:var(--txt);border:2px solid var(--cy);cursor:pointer;
+  }
+
+  /* ---------- paytable ---------- */
+  details.pt{
+    border:2px solid var(--edge);border-radius:var(--r);
+    background:linear-gradient(180deg,var(--panel-2),var(--panel));overflow:hidden;
+  }
+  details.pt>summary{
+    cursor:pointer;padding:12px 14px;list-style:none;
+    font-size:11px;font-weight:800;letter-spacing:.16em;text-transform:uppercase;color:var(--cy);
+  }
+  details.pt>summary::-webkit-details-marker{display:none}
+  details.pt>summary::after{content:" ▾";color:var(--mute)}
+  details.pt[open]>summary::after{content:" ▴"}
+  .ptbody{padding:0 14px 14px;display:grid;gap:14px}
+  .ptgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px}
+  .ptrow{
+    display:grid;grid-template-columns:40px 1fr;gap:9px;align-items:center;
+    background:#0F0722;border:1px solid #2B1A4C;border-radius:10px;padding:7px 9px;
+  }
+  .ptrow svg{width:36px;height:36px}
+  .ptrow .nm{font-size:10px;letter-spacing:.08em;text-transform:uppercase;color:var(--mute);font-weight:800}
+  .ptrow .pays{font-family:"IBM Plex Mono",monospace;font-size:11px;color:var(--txt);font-variant-numeric:tabular-nums;line-height:1.5}
+  .ptrow .pays span{color:var(--gold)}
+  .rules{font-size:12.5px;line-height:1.6;color:var(--mute);max-width:66ch}
+  .rules strong{color:var(--txt)}
+  .rules code{font-family:"IBM Plex Mono",monospace;color:var(--cy);font-size:.94em}
+
+  .foot{text-align:center;font-size:11px;color:#6E5D96;line-height:1.6}
+
+  :focus-visible{outline:3px solid var(--cy);outline-offset:3px;border-radius:6px}
+  @media (prefers-reduced-motion:reduce){
+    *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+  }
+</style>
+
+</head>
+<body>
+<div class="wrap">
+  <div class="logo">
+    <h1>Dopamine Bonanza</h1>
+    <div class="sub">6 × 5 &nbsp;·&nbsp; Pays Anywhere &nbsp;·&nbsp; Tumble</div>
+  </div>
+
+  <div class="stage">
+    <div class="rail">
+      <button class="buy fs" id="buyFs">
+        <b>Buy Free Spins</b>
+        <span class="amt" id="buyFsAmt">$100.00</span>
+        <span class="tiny">10 spins · 100× bet</span>
+      </button>
+      <button class="buy sfs" id="buySfs">
+        <b>Buy Super Free Spins</b>
+        <span class="amt" id="buySfsAmt">$500.00</span>
+        <span class="tiny">10 spins · richer orbs</span>
+      </button>
+      <div class="ante">
+        <span class="hd">Double Chance</span>
+        <div class="row">
+          <span class="cost" id="anteCost">$2.50</span>
+          <button class="sw" id="anteSw" role="switch" aria-checked="false" aria-label="Double chance to win feature"></button>
+        </div>
+        <span class="tiny">+25% stake, doubles the scatter rate.</span>
+      </div>
+    </div>
+
+    <div class="frame">
+      <div class="grid" id="grid" aria-label="Slot reels"></div>
+      <div class="flash" id="flash" hidden></div>
+      <div class="winbar" id="winbar" hidden></div>
+      <div class="fsbadge" id="fsbadge" hidden></div>
+      <div class="totmult" id="totmult" hidden></div>
+    </div>
+  </div>
+
+  <div class="bar">
+    <div class="meters">
+      <div class="meter"><div class="k">Credit</div><div class="v credit" id="credit">$1,000.00</div></div>
+      <div class="meter"><div class="k">Last Win</div><div class="v won" id="lastwin">$0.00</div></div>
+    </div>
+    <div class="spinwrap">
+      <button class="spin" id="spin" aria-label="Spin">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round">
+          <path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1"/><path d="M20.6 3.6v5.2h-5.2"/>
+        </svg>
+      </button>
+    </div>
+    <div class="betbox">
+      <button class="step" id="betDown" aria-label="Lower bet">−</button>
+      <div class="meter" style="text-align:center;min-width:86px">
+        <div class="k">Bet</div><div class="v" id="bet">$1.00</div>
+      </div>
+      <button class="step" id="betUp" aria-label="Raise bet">+</button>
+    </div>
+  </div>
+
+  <div class="utils">
+    <button class="ghost" id="auto" aria-pressed="false">Autoplay 25</button>
+    <button class="ghost" id="sound" aria-pressed="true">Sound On</button>
+    <div class="volwrap">
+      <label for="vol">Vol</label>
+      <input type="range" id="vol" min="0" max="100" value="70" aria-label="Volume">
+    </div>
+    <button class="ghost" id="reset">Reset Credit</button>
+  </div>
+
+  <details class="pt">
+    <summary>Paytable &amp; Rules</summary>
+    <div class="ptbody">
+      <div class="ptgrid" id="ptgrid"></div>
+      <div class="rules">
+        <p><strong>Pays anywhere.</strong> There are no paylines. Land <strong>8 or more</strong> of the same symbol anywhere on the 6×5 grid and it pays — position is irrelevant. Payouts above are multiples of your <em>total bet</em>, split into three count bands: 8–9, 10–11, and 12+.</p>
+        <p><strong>Tumble.</strong> Every winning symbol is removed, everything above it drops down, and fresh symbols fall in from the top. Tumbles repeat for free until no new win forms, and all wins in the sequence add up.</p>
+        <p><strong>Free spins.</strong> Land <strong>4 or more dopamine molecules</strong> (scatter) anywhere to win <strong>10 free spins</strong>. Landing 3+ scatters during the feature retriggers <code>+5</code> spins.</p>
+        <p><strong>Multiplier orbs.</strong> During free spins only, orbs worth <code>2×</code> to <code>100×</code> drop onto the grid. They never pay by themselves and survive every tumble — when the sequence ends, all orb values on screen are <em>added together</em> and applied to that spin's whole win.</p>
+        <p><strong>Double Chance</strong> raises your stake by 25% and doubles the scatter rate. <strong>Buy Free Spins</strong> costs 100× bet; <strong>Super Free Spins</strong> costs 500× and doubles both the frequency and the richness of the orbs.</p>
+      </div>
+    </div>
+  </details>
+
+  <p class="foot">Play-money demo — no real wagering, no purchases, no payouts. Credits are fictional and reset on reload.</p>
+</div>
+
+<script>
+(function(){
+  "use strict";
+
+  /* ============================================================
+     SYMBOL DEFINITIONS
+     Eight paying symbols (four "low" consumables, four "high"
+     status goods) plus one scatter. Weights are reel-strip
+     frequencies: low symbols are common, high symbols are rare.
+     ============================================================ */
+  var SYMBOLS = [
+    { id:"velo",    name:"Velo",            weight:150, pays:[0.25,0.75, 5] },
+    { id:"zyn",     name:"Zyn",             weight:145, pays:[0.40,1.00, 6] },
+    { id:"monster", name:"Monster",         weight:135, pays:[0.60,1.20, 8] },
+    { id:"redbull", name:"Energy Shot",     weight:128, pays:[0.80,1.50,10] },
+    { id:"iphone",  name:"iPhone 17 Pro",   weight: 96, pays:[1.50,2.00,12] },
+    { id:"cash",    name:"Cash",            weight: 84, pays:[2.00,5.00,15] },
+    { id:"ferrari", name:"Ferrari",         weight: 64, pays:[2.50,10.0,25] },
+    { id:"dom",     name:"Dom Pérignon",    weight: 44, pays:[10.0,25.0,50] }
+  ];
+  var SCATTER = { id:"scatter", name:"Dopamine", weight:16 };
+  var MULT_ID = "mult";
+
+  var SYM_BY_ID = {};
+  SYMBOLS.forEach(function(s){ SYM_BY_ID[s.id] = s; });
+
+  var COLS = 6, ROWS = 5;
+
+  /* Multiplier orb value table (value, relative weight) */
+  var ORB_TABLE = [
+    [2,300],[3,240],[4,180],[5,150],[6,110],[8,86],[10,64],
+    [12,42],[15,30],[20,22],[25,14],[50,6],[100,2]
+  ];
+
+  /* ============================================================
+     SVG ARTWORK — every symbol drawn inline, 100×100 viewBox.
+     ============================================================ */
+  function svg(inner, extra){
+    return '<svg viewBox="0 0 100 100" role="img" aria-hidden="true">'+(extra||"")+inner+'</svg>';
+  }
+
+  var ART = {
+
+    /* Zyn — pale mint nicotine pouch can, top-down */
+    zyn: function(){
+      return svg(
+        '<circle cx="50" cy="52" r="37" fill="#0A4E52"/>'+
+        '<circle cx="50" cy="48" r="37" fill="url(#zg)"/>'+
+        '<circle cx="50" cy="48" r="30" fill="none" stroke="#12A6A0" stroke-width="3"/>'+
+        '<circle cx="50" cy="48" r="22" fill="#F2FEFD"/>'+
+        '<text x="50" y="54" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="17" fill="#0B6C6E" letter-spacing="1">ZYN</text>'+
+        '<path d="M28 30a36 36 0 0 1 30-12" stroke="rgba(255,255,255,.75)" stroke-width="5" fill="none" stroke-linecap="round"/>',
+        '<defs><radialGradient id="zg" cx="36%" cy="28%"><stop offset="0" stop-color="#FFFFFF"/><stop offset="55%" stop-color="#D8F7F3"/><stop offset="100%" stop-color="#7FD6CE"/></radialGradient></defs>'
+      );
+    },
+
+    /* Velo — deep indigo pouch can, top-down */
+    velo: function(){
+      return svg(
+        '<circle cx="50" cy="52" r="37" fill="#0B0A2E"/>'+
+        '<circle cx="50" cy="48" r="37" fill="url(#vg)"/>'+
+        '<circle cx="50" cy="48" r="30" fill="none" stroke="#5C4BE0" stroke-width="3"/>'+
+        '<circle cx="50" cy="48" r="22" fill="#171449"/>'+
+        '<text x="50" y="54" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="14" fill="#9C8BFF" letter-spacing="1">VELO</text>'+
+        '<path d="M28 30a36 36 0 0 1 30-12" stroke="rgba(180,170,255,.55)" stroke-width="5" fill="none" stroke-linecap="round"/>',
+        '<defs><radialGradient id="vg" cx="36%" cy="28%"><stop offset="0" stop-color="#4E42A8"/><stop offset="55%" stop-color="#2A2270"/><stop offset="100%" stop-color="#14103F"/></radialGradient></defs>'
+      );
+    },
+
+    /* Monster — black can, green claw slashes */
+    monster: function(){
+      return svg(
+        '<rect x="30" y="14" width="40" height="72" rx="11" fill="url(#mg)"/>'+
+        '<rect x="30" y="14" width="40" height="72" rx="11" fill="none" stroke="#2E2E2E" stroke-width="2"/>'+
+        '<rect x="32" y="14" width="36" height="7" rx="3.5" fill="#BFC4C9"/>'+
+        '<ellipse cx="50" cy="16" rx="18" ry="4" fill="#DDE2E6"/>'+
+        '<path d="M40.5 29c4 11 3.6 22 .6 34-.6-12-2.6-22-5.6-31z" fill="#6AE82B"/>'+
+        '<path d="M50 27c4.4 12 4 24 .8 37-.8-13-2.8-24-6-34z" fill="#6AE82B"/>'+
+        '<path d="M59.5 29c4 11 3.6 22 .6 34-.6-12-2.6-22-5.6-31z" fill="#6AE82B"/>'+
+        '<text x="50" y="80" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="8" fill="#6AE82B" letter-spacing="1.2">ENERGY</text>'+
+        '<rect x="34" y="24" width="4" height="54" rx="2" fill="rgba(255,255,255,.14)"/>',
+        '<defs><linearGradient id="mg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1A1A1A"/><stop offset="42%" stop-color="#000"/><stop offset="100%" stop-color="#2A2A2A"/></linearGradient></defs>'
+      );
+    },
+
+    /* Energy shot — slim electric-blue can */
+    redbull: function(){
+      return svg(
+        '<rect x="33" y="14" width="34" height="72" rx="10" fill="url(#rg)"/>'+
+        '<rect x="33" y="14" width="34" height="72" rx="10" fill="none" stroke="#123A6E" stroke-width="2"/>'+
+        '<rect x="35" y="14" width="30" height="7" rx="3.5" fill="#C6CCD2"/>'+
+        '<ellipse cx="50" cy="16" rx="15" ry="3.5" fill="#E2E7EB"/>'+
+        '<path d="M50 30 L40 56 h9 l-4 20 15-28h-9z" fill="#FFD400"/>'+
+        '<rect x="36" y="24" width="3.6" height="54" rx="1.8" fill="rgba(255,255,255,.2)"/>',
+        '<defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#1E63C8"/><stop offset="45%" stop-color="#0B3E92"/><stop offset="100%" stop-color="#1A5AB4"/></linearGradient></defs>'
+      );
+    },
+
+    /* iPhone 17 Pro Max — titanium back, square camera plateau */
+    iphone: function(){
+      return svg(
+        '<rect x="28" y="8" width="44" height="84" rx="11" fill="url(#ig)"/>'+
+        '<rect x="28" y="8" width="44" height="84" rx="11" fill="none" stroke="#6E7176" stroke-width="2"/>'+
+        '<rect x="31" y="11" width="38" height="78" rx="9" fill="none" stroke="rgba(255,255,255,.22)" stroke-width="1.4"/>'+
+        '<rect x="33" y="13" width="30" height="26" rx="8" fill="#26282C"/>'+
+        '<circle cx="42" cy="21" r="5.4" fill="#0B0C0E" stroke="#8A8E94" stroke-width="1.6"/>'+
+        '<circle cx="54" cy="21" r="5.4" fill="#0B0C0E" stroke="#8A8E94" stroke-width="1.6"/>'+
+        '<circle cx="42" cy="32" r="5.4" fill="#0B0C0E" stroke="#8A8E94" stroke-width="1.6"/>'+
+        '<circle cx="42" cy="21" r="2.1" fill="#3E6FA8"/><circle cx="54" cy="21" r="2.1" fill="#3E6FA8"/>'+
+        '<circle cx="42" cy="32" r="2.1" fill="#3E6FA8"/>'+
+        '<circle cx="55" cy="33" r="2.6" fill="#C9CDD2"/>'+
+        '<rect x="44" y="60" width="12" height="15" rx="2.6" fill="rgba(255,255,255,.18)"/>'+
+        '<rect x="30" y="16" width="2.6" height="60" rx="1.3" fill="rgba(255,255,255,.3)"/>',
+        '<defs><linearGradient id="ig" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#9AA0A8"/><stop offset="35%" stop-color="#5E636B"/><stop offset="70%" stop-color="#7E848D"/><stop offset="100%" stop-color="#43474D"/></linearGradient></defs>'
+      );
+    },
+
+    /* Cash — banded stack of notes */
+    cash: function(){
+      return svg(
+        '<g transform="rotate(-8 50 56)">'+
+          '<rect x="16" y="62" width="68" height="16" rx="3" fill="#1D6B3A"/>'+
+          '<rect x="16" y="52" width="68" height="16" rx="3" fill="#25823F"/>'+
+          '<rect x="16" y="42" width="68" height="16" rx="3" fill="#2E9A4A"/>'+
+          '<rect x="16" y="28" width="68" height="20" rx="3" fill="#3CB35A"/>'+
+          '<rect x="19" y="31" width="62" height="14" rx="2" fill="none" stroke="#1D6B3A" stroke-width="1.4"/>'+
+          '<circle cx="50" cy="38" r="6.4" fill="#D6F5DE"/>'+
+          '<text x="50" y="42" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="9" fill="#1D6B3A">$</text>'+
+          '<rect x="40" y="24" width="20" height="58" rx="2" fill="#E0B23C"/>'+
+          '<rect x="40" y="24" width="20" height="58" rx="2" fill="none" stroke="#A97D14" stroke-width="1.2"/>'+
+        '</g>'
+      );
+    },
+
+    /* Ferrari — red mid-engine wedge, profile */
+    ferrari: function(){
+      return svg(
+        '<g transform="translate(0,6)">'+
+          '<path d="M8 60c0-6 5-9 12-10l12-13c5-5 12-8 21-8h10c11 0 20 5 26 13l5 7c4 2 4 10-2 11H12c-3 0-4-4-4-6z" fill="url(#fg)"/>'+
+          '<path d="M37 40c4-4 9-6 15-6h8c7 0 13 3 17 8H35z" fill="#1A2733"/>'+
+          '<path d="M14 54h72" stroke="rgba(0,0,0,.2)" stroke-width="2"/>'+
+          '<path d="M20 48c14-4 46-4 60 0" stroke="rgba(255,255,255,.35)" stroke-width="2.4" fill="none" stroke-linecap="round"/>'+
+          '<circle cx="29" cy="62" r="11" fill="#141414"/><circle cx="29" cy="62" r="5" fill="#C8CDD4"/>'+
+          '<circle cx="73" cy="62" r="11" fill="#141414"/><circle cx="73" cy="62" r="5" fill="#C8CDD4"/>'+
+          '<rect x="46" y="46" width="9" height="11" rx="1.6" fill="#FFE04A"/>'+
+          '<path d="M50 48l-1.6 6h2.4l-.6 3.4 2.6-4.8h-2z" fill="#111"/>'+
+        '</g>',
+        '<defs><linearGradient id="fg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FF3A2B"/><stop offset="55%" stop-color="#D8140A"/><stop offset="100%" stop-color="#8E0703"/></linearGradient></defs>'
+      );
+    },
+
+    /* Dom Pérignon — dark green bottle, gold foil and shield */
+    dom: function(){
+      return svg(
+        '<path d="M44 10h12v9c0 4 2 6 4 9 4 5 6 10 6 17v40a5 5 0 0 1-5 5H39a5 5 0 0 1-5-5V45c0-7 2-12 6-17 2-3 4-5 4-9z" fill="url(#dg)"/>'+
+        '<path d="M44 10h12v9c0 4 2 6 4 9 4 5 6 10 6 17v40a5 5 0 0 1-5 5H39a5 5 0 0 1-5-5V45c0-7 2-12 6-17 2-3 4-5 4-9z" fill="none" stroke="#0B2A18" stroke-width="2"/>'+
+        '<path d="M43 8h14v15H43z" fill="#E7B63C"/>'+
+        '<path d="M42 22h16v7H42z" fill="#C3901F"/>'+
+        '<path d="M50 44l13 4v11c0 9-6 15-13 18-7-3-13-9-13-18V48z" fill="#F0CE72"/>'+
+        '<path d="M50 44l13 4v11c0 9-6 15-13 18-7-3-13-9-13-18V48z" fill="none" stroke="#8E6510" stroke-width="1.6"/>'+
+        '<text x="50" y="60" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="12" fill="#2C4A22">DP</text>'+
+        '<path d="M41 64h18" stroke="#2C4A22" stroke-width="1.6"/>'+
+        '<rect x="37" y="34" width="3.4" height="48" rx="1.7" fill="rgba(255,255,255,.22)"/>',
+        '<defs><linearGradient id="dg" x1="0" y1="0" x2="1" y2="0"><stop offset="0" stop-color="#2F6B38"/><stop offset="45%" stop-color="#14401F"/><stop offset="100%" stop-color="#285E30"/></linearGradient></defs>'
+      );
+    },
+
+    /* Scatter — dopamine molecule: catechol ring, OH groups, ethylamine tail */
+    scatter: function(){
+      var ring = "M50 24 L69 35 L69 57 L50 68 L31 57 L31 35 Z";
+      return svg(
+        '<circle cx="50" cy="50" r="44" fill="url(#sg)"/>'+
+        '<path d="'+ring+'" fill="none" stroke="#29E8DE" stroke-width="5" stroke-linejoin="round"/>'+
+        '<path d="M53 31 L64 37 M64 52 L53 59 M36 52 L36 39" fill="none" stroke="#29E8DE" stroke-width="2.6"/>'+
+        '<path d="M31 35 L14 26 M31 57 L14 66" stroke="#FF2D87" stroke-width="4.6" stroke-linecap="round"/>'+
+        '<circle cx="12" cy="24" r="6.4" fill="#FF2D87"/><circle cx="12" cy="68" r="6.4" fill="#FF2D87"/>'+
+        '<path d="M69 35 L83 27 L94 34" fill="none" stroke="#B8FF3C" stroke-width="4.6" stroke-linecap="round" stroke-linejoin="round"/>'+
+        '<circle cx="95" cy="35" r="6.4" fill="#B8FF3C"/>'+
+        '<text x="12" y="27" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="7" fill="#2A0716">OH</text>'+
+        '<text x="12" y="71" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="7" fill="#2A0716">OH</text>'+
+        '<text x="95" y="38" text-anchor="middle" font-family="Archivo,Arial" font-weight="800" font-size="7" fill="#132A03">N</text>',
+        '<defs><radialGradient id="sg" cx="50%" cy="46%"><stop offset="0" stop-color="rgba(41,232,222,.34)"/><stop offset="70%" stop-color="rgba(255,45,135,.16)"/><stop offset="100%" stop-color="rgba(255,45,135,0)"/></radialGradient></defs>'
+      );
+    }
+  };
+
+  /* SVG gradient ids must be unique per instance or browsers reuse
+     the first definition. Render once, then clone by string with a
+     per-cell suffix. */
+  var artCounter = 0;
+  function renderSymbol(id){
+    var fn = ART[id];
+    if(!fn) return "";
+    var markup = fn();
+    var n = ++artCounter;
+    return markup.replace(/id="(\w+)"/g, 'id="$1_'+n+'"')
+                 .replace(/url\(#(\w+)\)/g, 'url(#$1_'+n+')');
+  }
+
+  /* ============================================================
+     RNG / REEL STRIP
+     ============================================================ */
+  function buildStrip(anteOn){
+    var strip = [];
+    SYMBOLS.forEach(function(s){ for(var i=0;i<s.weight;i++) strip.push(s.id); });
+    var sw = SCATTER.weight * (anteOn ? 2 : 1);
+    for(var j=0;j<sw;j++) strip.push(SCATTER.id);
+    return strip;
+  }
+  function pick(strip){ return strip[Math.floor(Math.random()*strip.length)]; }
+
+  function pickOrb(){
+    var total = 0, i;
+    for(i=0;i<ORB_TABLE.length;i++) total += ORB_TABLE[i][1];
+    var r = Math.random()*total;
+    for(i=0;i<ORB_TABLE.length;i++){
+      r -= ORB_TABLE[i][1];
+      if(r <= 0) return ORB_TABLE[i][0];
+    }
+    return 2;
+  }
+
+  /* ============================================================
+     GAME STATE
+     grid is COLS arrays of ROWS cells, index 0 = top row.
+     A cell is { s:<symbolId>, m:<orbValue|0>, fresh:<bool> }.
+     ============================================================ */
+  var BETS = [0.20,0.40,0.60,0.80,1.00,2.00,4.00,6.00,10.00,20.00,50.00,100.00];
+
+  var S = {
+    credit: 1000,
+    betIndex: 4,
+    ante: false,
+    grid: [],
+    busy: false,
+    lastWin: 0,
+    free: 0,
+    freeTotal: 0,
+    superMode: false,
+    freeWin: 0,
+    auto: 0,
+    sound: true
+  };
+
+  function bet(){ return BETS[S.betIndex]; }
+  function stake(){ return S.ante ? bet()*1.25 : bet(); }
+
+  function money(n){
+    return "$" + n.toLocaleString("en-US",{minimumFractionDigits:2, maximumFractionDigits:2});
+  }
+
+  /* ============================================================
+     DOM
+     ============================================================ */
+  var $ = function(id){ return document.getElementById(id); };
+  var elGrid=$("grid"), elFlash=$("flash"), elWinbar=$("winbar"),
+      elFsBadge=$("fsbadge"), elTotMult=$("totmult"),
+      elCredit=$("credit"), elLastWin=$("lastwin"), elBet=$("bet"),
+      elSpin=$("spin"), elAnteSw=$("anteSw"), elAnteCost=$("anteCost"),
+      elBuyFs=$("buyFs"), elBuySfs=$("buySfs"),
+      elBuyFsAmt=$("buyFsAmt"), elBuySfsAmt=$("buySfsAmt"),
+      elAuto=$("auto"), elSound=$("sound"), elReset=$("reset"), elVol=$("vol"),
+      elBetUp=$("betUp"), elBetDown=$("betDown");
+
+  var cellEls = []; /* cellEls[col][row] */
+
+  function buildDom(){
+    elGrid.innerHTML = "";
+    cellEls = [];
+    for(var c=0;c<COLS;c++){
+      var col = document.createElement("div");
+      col.className = "col";
+      var arr = [];
+      for(var r=0;r<ROWS;r++){
+        var cell = document.createElement("div");
+        cell.className = "cell";
+        col.appendChild(cell);
+        arr.push(cell);
+      }
+      cellEls.push(arr);
+      elGrid.appendChild(col);
+    }
+  }
+
+  function newGrid(strip){
+    var g = [];
+    for(var c=0;c<COLS;c++){
+      var col = [];
+      for(var r=0;r<ROWS;r++) col.push({ s:pick(strip), m:0, fresh:true });
+      g.push(col);
+    }
+    return g;
+  }
+
+  function paint(opts){
+    opts = opts || {};
+    for(var c=0;c<COLS;c++){
+      for(var r=0;r<ROWS;r++){
+        var cell = S.grid[c][r], el = cellEls[c][r];
+        var html = cell.m ? "" : renderSymbol(cell.s);
+        el.className = "cell";
+        if(cell.m){
+          el.innerHTML = '<div class="orb">'+cell.m+'×</div>';
+        }else{
+          el.innerHTML = html;
+          if(cell.s === SCATTER.id) el.classList.add("scat");
+        }
+        if(opts.blur) el.classList.add("blur");
+        if(cell.fresh && !opts.blur){
+          el.classList.add("drop");
+          el.style.animationDelay = ((ROWS-1-r)*36) + "ms";
+        }else{
+          el.style.animationDelay = "";
+        }
+      }
+    }
+  }
+
+  function clearFresh(){
+    for(var c=0;c<COLS;c++) for(var r=0;r<ROWS;r++) S.grid[c][r].fresh = false;
+  }
+
+  /* ============================================================
+     WIN EVALUATION — scatter pays, 8+ anywhere
+     ============================================================ */
+  function evaluate(){
+    var counts = {}, positions = {};
+    for(var c=0;c<COLS;c++){
+      for(var r=0;r<ROWS;r++){
+        var cell = S.grid[c][r];
+        if(cell.m) continue;                 /* orbs never pay */
+        if(cell.s === SCATTER.id) continue;  /* scatter pays only as trigger */
+        counts[cell.s] = (counts[cell.s]||0) + 1;
+        (positions[cell.s] = positions[cell.s] || []).push([c,r]);
+      }
+    }
+    var wins = [];
+    for(var id in counts){
+      var n = counts[id];
+      if(n < 8) continue;
+      var sym = SYM_BY_ID[id];
+      var band = n >= 12 ? 2 : (n >= 10 ? 1 : 0);
+      wins.push({ id:id, count:n, mult:sym.pays[band], amount:sym.pays[band]*bet(), cells:positions[id] });
+    }
+    return wins;
+  }
+
+  function countScatters(){
+    var n = 0;
+    for(var c=0;c<COLS;c++) for(var r=0;r<ROWS;r++){
+      if(!S.grid[c][r].m && S.grid[c][r].s === SCATTER.id) n++;
+    }
+    return n;
+  }
+
+  function sumOrbs(){
+    var t = 0;
+    for(var c=0;c<COLS;c++) for(var r=0;r<ROWS;r++) t += S.grid[c][r].m || 0;
+    return t;
+  }
+
+  /* Remove winning cells, let survivors fall, refill from the top.
+     Orbs survive every tumble — they only clear when the spin ends. */
+  function tumble(wins, strip, orbChance){
+    var doomed = {};
+    wins.forEach(function(w){
+      w.cells.forEach(function(p){ doomed[p[0]+":"+p[1]] = true; });
+    });
+    for(var c=0;c<COLS;c++){
+      var kept = [];
+      for(var r=0;r<ROWS;r++){
+        if(!doomed[c+":"+r]) kept.push(S.grid[c][r]);
+      }
+      kept.forEach(function(cell){ cell.fresh = false; });
+      var need = ROWS - kept.length, fills = [];
+      for(var k=0;k<need;k++){
+        var cell = { s:pick(strip), m:0, fresh:true };
+        if(orbChance > 0 && Math.random() < orbChance){ cell.m = pickOrb(); cell.s = MULT_ID; }
+        fills.push(cell);
+      }
+      S.grid[c] = fills.concat(kept);
+    }
+  }
+
+  /* ============================================================
+     PRESENTATION HELPERS
+     ============================================================ */
+  function sleep(ms){ return new Promise(function(res){ setTimeout(res, ms); }); }
+
+  function highlight(wins){
+    wins.forEach(function(w){
+      w.cells.forEach(function(p){ cellEls[p[0]][p[1]].classList.add("win"); });
+    });
+  }
+  function popWins(wins){
+    wins.forEach(function(w){
+      w.cells.forEach(function(p){
+        var el = cellEls[p[0]][p[1]];
+        el.classList.remove("win");
+        el.classList.add("pop");
+      });
+    });
+  }
+
+  function showWinbar(amount, chainLabel){
+    elWinbar.hidden = false;
+    elWinbar.textContent = (chainLabel ? chainLabel+"  " : "") + money(amount);
+  }
+  function hideWinbar(){ elWinbar.hidden = true; }
+
+  function flash(title, sub, amount){
+    elFlash.hidden = false;
+    elFlash.className = "flash dim";
+    elFlash.innerHTML =
+      '<div><h2>'+title+'</h2>'+
+      (sub ? '<p>'+sub+'</p>' : '')+
+      (amount != null ? '<div class="big">'+money(amount)+'</div>' : '')+
+      '</div>';
+  }
+  function hideFlash(){ elFlash.hidden = true; elFlash.innerHTML = ""; }
+
+  function winTier(amount){
+    var x = amount / bet();
+    if(x >= 250) return ["Dopamine Overload", "max receptors saturated"];
+    if(x >= 100) return ["Mega Win", "serotonin secondary"];
+    if(x >= 40)  return ["Super Win", "hit the receptors"];
+    if(x >= 15)  return ["Big Win", "that one landed"];
+    return null;
+  }
+
+  async function countUp(amount){
+    var tier = winTier(amount);
+    if(!tier){ showWinbar(amount); return; }
+    flash(tier[0], tier[1], 0);
+    SFX.bigWinStart();
+    var big = elFlash.querySelector(".big");
+    var steps = 26;
+    for(var i=1;i<=steps;i++){
+      big.textContent = money(amount * (i/steps));
+      SFX.countTick(i, steps);
+      await sleep(34);
+    }
+    SFX.cashIn();
+    await sleep(760);
+    hideFlash();
+    showWinbar(amount);
+  }
+
+  /* ============================================================
+     SFX ENGINE
+     Everything is synthesised at runtime with WebAudio — no audio
+     files, which also means nothing to load and nothing blocked by
+     a content policy. Two buses hang off a master gain so the free
+     spins music can duck under the effects.
+     ============================================================ */
+  var SFX = (function(){
+    var ctx = null, master = null, busSfx = null, busMusic = null, noiseBuf = null;
+    var ready = false;
+
+    function init(){
+      if(ready) return true;
+      try{
+        var AC = window.AudioContext || window.webkitAudioContext;
+        if(!AC) return false;
+        ctx = new AC();
+        master = ctx.createGain();  master.gain.value = 0.7;
+        busSfx = ctx.createGain();  busSfx.gain.value = 1.0;
+        busMusic = ctx.createGain();busMusic.gain.value = 0.0;
+        busSfx.connect(master); busMusic.connect(master);
+        master.connect(ctx.destination);
+
+        /* one second of white noise, reused for every percussive hit */
+        var len = ctx.sampleRate;
+        noiseBuf = ctx.createBuffer(1, len, ctx.sampleRate);
+        var data = noiseBuf.getChannelData(0);
+        for(var i=0;i<len;i++) data[i] = Math.random()*2 - 1;
+
+        ready = true;
+        return true;
+      }catch(e){ return false; }
+    }
+
+    function on(){
+      if(!S.sound) return false;
+      if(!init()) return false;
+      if(ctx.state === "suspended") ctx.resume();
+      return true;
+    }
+    function t0(d){ return ctx.currentTime + (d||0); }
+
+    /* --- a pitched voice with an ADSR-ish envelope and optional glide --- */
+    function tone(o){
+      if(!on()) return;
+      o = o || {};
+      var start = t0(o.delay),
+          dur   = o.dur   || 0.18,
+          gain  = o.gain  == null ? 0.18 : o.gain,
+          atk   = o.attack == null ? 0.006 : o.attack,
+          bus   = o.bus === "music" ? busMusic : busSfx;
+
+      var osc = ctx.createOscillator(), g = ctx.createGain();
+      osc.type = o.type || "triangle";
+      osc.frequency.setValueAtTime(o.freq, start);
+      if(o.to) osc.frequency.exponentialRampToValueAtTime(Math.max(20, o.to), start + dur);
+      if(o.detune) osc.detune.value = o.detune;
+
+      var node = osc;
+      if(o.filter){
+        var f = ctx.createBiquadFilter();
+        f.type = "lowpass";
+        f.frequency.setValueAtTime(o.filter, start);
+        if(o.filterTo) f.frequency.exponentialRampToValueAtTime(Math.max(60,o.filterTo), start+dur);
+        f.Q.value = o.q || 1;
+        osc.connect(f); node = f;
+      }
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(gain, start + atk);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      node.connect(g); g.connect(bus);
+      osc.start(start); osc.stop(start + dur + 0.03);
+    }
+
+    /* --- filtered noise: thuds, whooshes, sparkle tails --- */
+    function noise(o){
+      if(!on()) return;
+      o = o || {};
+      var start = t0(o.delay),
+          dur   = o.dur  || 0.2,
+          gain  = o.gain == null ? 0.16 : o.gain;
+
+      var src = ctx.createBufferSource(); src.buffer = noiseBuf;
+      var f = ctx.createBiquadFilter();
+      f.type = o.type || "bandpass";
+      f.frequency.setValueAtTime(o.from || 900, start);
+      if(o.to) f.frequency.exponentialRampToValueAtTime(Math.max(60,o.to), start + dur);
+      f.Q.value = o.q || 1.2;
+      var g = ctx.createGain();
+      g.gain.setValueAtTime(0.0001, start);
+      g.gain.exponentialRampToValueAtTime(gain, start + 0.008);
+      g.gain.exponentialRampToValueAtTime(0.0001, start + dur);
+      src.connect(f); f.connect(g); g.connect(busSfx);
+      src.start(start); src.stop(start + dur + 0.03);
+    }
+
+    /* --- a metallic bell: stacked inharmonic partials --- */
+    function bell(freq, dur, gain, delay){
+      [1, 2.02, 2.99, 4.21].forEach(function(p, i){
+        tone({ freq:freq*p, dur:(dur||0.7)*(1 - i*0.16), gain:(gain||0.13)/(i+1.5),
+               type:"sine", delay:delay||0, attack:0.004 });
+      });
+    }
+
+    var SEMI = Math.pow(2, 1/12);
+    function step(base, n){ return base * Math.pow(SEMI, n); }
+
+    /* ========== named effects ========== */
+    var api = {
+      setVolume:function(v){ if(init()) master.gain.value = v; },
+      resume:function(){ on(); },
+
+      click:function(){
+        tone({freq:520, to:300, dur:0.07, gain:0.12, type:"square"});
+        noise({from:2600, to:900, dur:0.05, gain:0.07});
+      },
+      betTick:function(up){
+        tone({freq:up?720:560, to:up?900:440, dur:0.09, gain:0.13, type:"triangle"});
+      },
+      toggle:function(onState){
+        tone({freq:onState?520:420, dur:0.08, gain:0.13, type:"sine"});
+        tone({freq:onState?780:320, dur:0.14, gain:0.11, type:"sine", delay:0.07});
+      },
+
+      /* lever pull: descending whoosh over a low thump */
+      spinStart:function(){
+        noise({from:5200, to:600, dur:0.42, gain:0.13, q:0.8});
+        tone({freq:170, to:60, dur:0.3, gain:0.26, type:"sine"});
+        tone({freq:340, to:120, dur:0.18, gain:0.07, type:"sawtooth", filter:1800, filterTo:400});
+      },
+      /* reels whirring while blurred */
+      reelLoop:function(i){
+        tone({freq:120 + (i%3)*24, to:90, dur:0.09, gain:0.05, type:"sawtooth",
+              filter:900, filterTo:300, delay:i*0.05});
+      },
+      /* one column slamming into place */
+      reelStop:function(i){
+        var d = i*0.075;
+        noise({from:1700, to:260, dur:0.11, gain:0.14, delay:d, q:0.9});
+        tone({freq:190 - i*8, to:70, dur:0.13, gain:0.2, type:"sine", delay:d});
+        tone({freq:900 + i*40, to:500, dur:0.05, gain:0.05, type:"square", delay:d});
+      },
+
+      /* win chime — climbs a step with every tumble in the chain */
+      winHit:function(chain){
+        var base = step(523.25, Math.min(chain-1, 10) * 2);
+        [0, 4, 7].forEach(function(n, i){
+          tone({freq:step(base,n), dur:0.3, gain:0.15, type:"triangle", delay:i*0.045});
+        });
+        noise({from:5000, to:2200, dur:0.18, gain:0.06});
+      },
+      /* symbols bursting off the grid */
+      pop:function(n){
+        for(var i=0;i<Math.min(n,6);i++){
+          noise({from:2600 + Math.random()*2400, to:700, dur:0.09, gain:0.06, delay:i*0.028});
+        }
+        tone({freq:260, to:110, dur:0.12, gain:0.1, type:"sine"});
+      },
+      /* the cascade landing */
+      tumbleLand:function(){
+        noise({from:1200, to:220, dur:0.16, gain:0.1, q:0.8});
+        tone({freq:150, to:70, dur:0.15, gain:0.14, type:"sine"});
+      },
+
+      /* scatter chime, rising with each one on screen */
+      scatterHit:function(n){
+        bell(step(659.25, (n-1)*3), 0.85, 0.16);
+        noise({from:7000, to:3000, dur:0.3, gain:0.05});
+      },
+      /* feature trigger fanfare */
+      fanfare:function(big){
+        var root = big ? 261.63 : 196.00;
+        [0,4,7,12,16,19].forEach(function(n,i){
+          tone({freq:step(root,n), dur:0.7, gain:0.14, type:"triangle", delay:i*0.09});
+          tone({freq:step(root,n)/2, dur:0.7, gain:0.08, type:"sine", delay:i*0.09});
+        });
+        noise({from:400, to:7000, dur:0.6, gain:0.08, q:0.7});
+        bell(step(root,24), 1.4, 0.13, 0.55);
+      },
+      retrigger:function(){
+        [0,5,9,12].forEach(function(n,i){
+          tone({freq:step(392,n), dur:0.45, gain:0.15, type:"triangle", delay:i*0.08});
+        });
+      },
+
+      /* an orb landing — brighter the bigger it is */
+      orbLand:function(value){
+        var n = Math.min(Math.log(value)/Math.log(2) * 3, 22);
+        bell(step(880, n), 0.5, 0.12);
+        noise({from:9000, to:4000, dur:0.22, gain:0.05});
+      },
+      /* riser that resolves as the orb total is applied */
+      multRiser:function(total, secs){
+        var d = secs || 0.5;
+        tone({freq:200, to:1800, dur:d, gain:0.13, type:"sawtooth",
+              filter:600, filterTo:6000, q:6});
+        noise({from:300, to:8000, dur:d, gain:0.08, q:0.6});
+        tone({freq:110, dur:0.5, gain:0.26, type:"sine", delay:d});
+        bell(1046.5, 1.0, 0.16, d);
+      },
+
+      /* ticking while the win counter runs */
+      countTick:function(i, steps){
+        tone({freq:step(440, (i/steps)*24), dur:0.05, gain:0.09, type:"square"});
+      },
+      bigWinStart:function(){
+        tone({freq:80, to:200, dur:0.5, gain:0.22, type:"sine"});
+        noise({from:200, to:6000, dur:0.5, gain:0.07, q:0.6});
+      },
+      cashIn:function(){
+        [0,7,12,19].forEach(function(n,i){
+          bell(step(523.25,n), 0.9, 0.13, i*0.07);
+        });
+      },
+
+      /* --- free spins backing loop: 16-step sequencer --- */
+      music:(function(){
+        var timer = null, i = 0;
+        var BASS = [55.00, 0, 0, 55.00, 0, 0, 43.65, 0, 49.00, 0, 0, 49.00, 0, 0, 41.20, 0];
+        var ARP  = [0, 7, 12, 15, 12, 7, 15, 19, 0, 7, 12, 15, 19, 15, 12, 7];
+        return {
+          start:function(){
+            if(timer || !on()) return;
+            busMusic.gain.setTargetAtTime(0.5, ctx.currentTime, 0.4);
+            i = 0;
+            timer = setInterval(function(){
+              if(!S.sound) return;
+              var s = i % 16;
+              if(BASS[s]) tone({freq:BASS[s], dur:0.3, gain:0.3, type:"sawtooth",
+                                filter:420, filterTo:160, q:5, bus:"music"});
+              tone({freq:step(220, ARP[s]), dur:0.13, gain:0.075, type:"square",
+                    filter:2600, bus:"music"});
+              if(s % 4 === 2) noise({from:8000, to:5000, dur:0.05, gain:0.03});
+              i++;
+            }, 125);
+          },
+          stop:function(){
+            if(!timer) return;
+            clearInterval(timer); timer = null;
+            if(ready) busMusic.gain.setTargetAtTime(0.0001, ctx.currentTime, 0.25);
+          }
+        };
+      })()
+    };
+    return api;
+  })();
+
+  /* ============================================================
+     RENDER OF METERS / CONTROLS
+     ============================================================ */
+  function render(){
+    elCredit.textContent = money(S.credit);
+    elLastWin.textContent = money(S.lastWin);
+    elBet.textContent = money(bet());
+    elAnteCost.textContent = money(bet()*1.25);
+    elBuyFsAmt.textContent = money(bet()*100);
+    elBuySfsAmt.textContent = money(bet()*500);
+    elAnteSw.setAttribute("aria-checked", S.ante ? "true" : "false");
+
+    var locked = S.busy || S.free > 0;
+    elBetUp.disabled   = locked || S.betIndex >= BETS.length-1;
+    elBetDown.disabled = locked || S.betIndex <= 0;
+    elBuyFs.disabled   = locked || S.credit < bet()*100;
+    elBuySfs.disabled  = locked || S.credit < bet()*500;
+    elAnteSw.disabled  = locked;
+    elSpin.disabled    = S.busy || (S.free === 0 && S.credit < stake());
+    elSpin.classList.toggle("busy", S.busy);
+    elAuto.setAttribute("aria-pressed", S.auto > 0 ? "true" : "false");
+    elAuto.textContent = S.auto > 0 ? ("Stop ("+S.auto+")") : "Autoplay 25";
+    elSound.setAttribute("aria-pressed", S.sound ? "true" : "false");
+    elSound.textContent = S.sound ? "Sound On" : "Sound Off";
+
+    if(S.free > 0){
+      elFsBadge.hidden = false;
+      elFsBadge.textContent = (S.superMode ? "Super Free Spins" : "Free Spins") +
+        " · " + S.free + " left · " + money(S.freeWin);
+    }else{
+      elFsBadge.hidden = true;
+    }
+  }
+
+  /* ============================================================
+     CORE SPIN CYCLE
+     ============================================================ */
+  async function runSpin(isFree){
+    S.busy = true;
+    hideWinbar(); hideFlash();
+    elTotMult.hidden = true;
+
+    if(!isFree){
+      S.credit -= stake();
+      S.lastWin = 0;
+    }
+    render();
+    SFX.spinStart();
+
+    var strip = buildStrip(S.ante);
+    /* Orbs only exist inside the feature. Super mode doubles the rate. */
+    var orbChance = isFree ? (S.superMode ? 0.062 : 0.031) : 0;
+
+    /* --- reel blur-in --- */
+    for(var f=0; f<3; f++){
+      S.grid = newGrid(strip);
+      paint({blur:true});
+      SFX.reelLoop(f);
+      await sleep(70);
+    }
+
+    /* --- final landing grid --- */
+    S.grid = newGrid(strip);
+    var orbsLanded = [];
+    if(orbChance > 0){
+      for(var c=0;c<COLS;c++) for(var r=0;r<ROWS;r++){
+        if(Math.random() < orbChance){
+          S.grid[c][r].m = pickOrb(); S.grid[c][r].s = MULT_ID;
+          orbsLanded.push(S.grid[c][r].m);
+        }
+      }
+    }
+    paint();
+    for(var sc=0; sc<COLS; sc++) SFX.reelStop(sc);   /* columns slam in sequence */
+    await sleep(320);
+    clearFresh();
+
+    /* scatter and orb landing chimes */
+    var scatNow = countScatters();
+    for(var sn=1; sn<=Math.min(scatNow,6); sn++){
+      (function(k){ setTimeout(function(){ SFX.scatterHit(k); }, k*140); })(sn);
+    }
+    orbsLanded.forEach(function(v, oi){
+      setTimeout(function(){ SFX.orbLand(v); }, 120 + oi*110);
+    });
+    if(scatNow >= 3 || orbsLanded.length) await sleep(360);
+
+    /* --- tumble loop --- */
+    var spinWin = 0, chain = 0;
+    while(true){
+      var wins = evaluate();
+      if(wins.length === 0) break;
+      chain++;
+      var step = wins.reduce(function(a,w){ return a + w.amount; }, 0);
+      spinWin += step;
+
+      highlight(wins);
+      SFX.winHit(chain);
+      showWinbar(spinWin, chain > 1 ? ("Tumble ×"+chain) : "");
+      await sleep(460);
+
+      var popCount = wins.reduce(function(a,w){ return a + w.cells.length; }, 0);
+      popWins(wins);
+      SFX.pop(popCount);
+      await sleep(210);
+
+      var before = sumOrbs();
+      tumble(wins, strip, orbChance);
+      paint();
+      SFX.tumbleLand();
+      var after = sumOrbs();
+      if(after > before) SFX.orbLand(after - before);
+      await sleep(330);
+      clearFresh();
+    }
+
+    /* --- multiplier orbs resolve at the end of the sequence --- */
+    var orbTotal = sumOrbs();
+    if(isFree && orbTotal > 0 && spinWin > 0){
+      elTotMult.hidden = false;
+      elTotMult.textContent = orbTotal + "× TOTAL";
+      SFX.multRiser(orbTotal, 0.5);
+      await sleep(520);
+      spinWin *= orbTotal;
+      showWinbar(spinWin, orbTotal+"×");
+      await sleep(420);
+    }else if(isFree && orbTotal > 0){
+      elTotMult.hidden = false;
+      elTotMult.textContent = orbTotal + "× TOTAL";
+    }
+
+    /* --- scatter check --- */
+    var scat = countScatters();
+
+    if(spinWin > 0){
+      S.credit += spinWin;
+      S.lastWin = isFree ? S.lastWin + spinWin : spinWin;
+      if(isFree) S.freeWin += spinWin;
+      render();
+      await countUp(spinWin);
+    }
+
+    if(isFree){
+      S.free--;
+      render();
+      if(scat >= 3){
+        S.free += 5;
+        SFX.retrigger();
+        flash("+5 Free Spins", "retriggered");
+        await sleep(1200);
+        hideFlash();
+        render();
+      }
+    }else if(scat >= 4){
+      await triggerFeature(false, scat);
+    }
+
+    S.busy = false;
+    render();
+    await sleep(160);
+
+    /* --- continue feature or autoplay --- */
+    if(S.free > 0){
+      await runSpin(true);
+      return;
+    }
+    if(isFree){
+      /* feature over: cut the music and show the total it paid */
+      SFX.music.stop();
+      SFX.cashIn();
+      flash("Feature Complete", S.freeTotal + " free spins paid", S.freeWin);
+      await sleep(1900);
+      hideFlash();
+      elTotMult.hidden = true;
+      render();
+    }
+
+    if(S.auto > 0 && S.credit >= stake()){
+      S.auto--;
+      render();
+      if(S.auto >= 0){ await sleep(220); if(!S.busy) await runSpin(false); }
+    }else if(S.auto > 0){
+      S.auto = 0; render();
+    }
+  }
+
+  async function triggerFeature(isSuper, scat){
+    S.free = 10;
+    S.freeTotal = 10;
+    S.superMode = !!isSuper;
+    S.freeWin = 0;
+    SFX.fanfare(!!isSuper);
+    flash(isSuper ? "Super Free Spins" : "Free Spins",
+          scat ? (scat + " dopamine molecules") : "feature purchased");
+    await sleep(1500);
+    hideFlash();
+    SFX.music.start();          /* backing loop runs for the whole feature */
+    render();
+  }
+
+  /* ============================================================
+     CONTROLS
+     ============================================================ */
+  elSpin.addEventListener("click", function(){
+    SFX.resume();                 /* first gesture unlocks WebAudio */
+    if(S.busy) return;
+    if(S.free > 0){ runSpin(true); return; }
+    if(S.credit < stake()) return;
+    runSpin(false);
+  });
+
+  elBetUp.addEventListener("click", function(){
+    if(S.betIndex < BETS.length-1){ S.betIndex++; render(); SFX.betTick(true); }
+  });
+  elBetDown.addEventListener("click", function(){
+    if(S.betIndex > 0){ S.betIndex--; render(); SFX.betTick(false); }
+  });
+
+  elAnteSw.addEventListener("click", function(){
+    S.ante = !S.ante; render(); SFX.toggle(S.ante);
+  });
+
+  elBuyFs.addEventListener("click", async function(){
+    SFX.resume(); SFX.click();
+    if(S.busy) return;
+    var cost = bet()*100;
+    if(S.credit < cost) return;
+    S.credit -= cost; S.lastWin = 0; S.busy = true; render();
+    await triggerFeature(false, 0);
+    S.busy = false;
+    await runSpin(true);
+  });
+
+  elBuySfs.addEventListener("click", async function(){
+    SFX.resume(); SFX.click();
+    if(S.busy) return;
+    var cost = bet()*500;
+    if(S.credit < cost) return;
+    S.credit -= cost; S.lastWin = 0; S.busy = true; render();
+    await triggerFeature(true, 0);
+    S.busy = false;
+    await runSpin(true);
+  });
+
+  elAuto.addEventListener("click", function(){
+    SFX.resume(); SFX.click();
+    if(S.auto > 0){ S.auto = 0; render(); return; }
+    S.auto = 25; render();
+    if(!S.busy && S.free === 0){ S.auto--; runSpin(false); }
+  });
+
+  elSound.addEventListener("click", function(){
+    S.sound = !S.sound; render();
+    if(S.sound){ SFX.resume(); SFX.toggle(true); }
+    else SFX.music.stop();
+  });
+
+  elVol.addEventListener("input", function(){
+    SFX.setVolume(Number(elVol.value)/100);
+  });
+  elVol.addEventListener("change", function(){ SFX.click(); });
+
+  elReset.addEventListener("click", function(){
+    if(S.busy) return;
+    SFX.click(); SFX.music.stop();
+    S.credit = 1000; S.lastWin = 0; S.auto = 0; S.free = 0;
+    hideWinbar(); hideFlash(); elTotMult.hidden = true;
+    render();
+  });
+
+  document.addEventListener("keydown", function(e){
+    if(e.code === "Space" && !/^(BUTTON|INPUT|SUMMARY)$/.test(e.target.tagName)){
+      e.preventDefault(); elSpin.click();
+    }
+  });
+
+  /* ============================================================
+     PAYTABLE
+     ============================================================ */
+  function buildPaytable(){
+    var host = $("ptgrid");
+    var rows = SYMBOLS.slice().reverse().map(function(s){
+      return '<div class="ptrow">'+renderSymbol(s.id)+
+        '<div><div class="nm">'+s.name+'</div>'+
+        '<div class="pays">8–9 <span>'+s.pays[0].toFixed(2)+'×</span> · '+
+        '10–11 <span>'+s.pays[1].toFixed(2)+'×</span> · '+
+        '12+ <span>'+s.pays[2].toFixed(2)+'×</span></div></div></div>';
+    });
+    rows.push('<div class="ptrow">'+renderSymbol("scatter")+
+      '<div><div class="nm">Dopamine — Scatter</div>'+
+      '<div class="pays">4+ anywhere <span>10 free spins</span></div></div></div>');
+    host.innerHTML = rows.join("");
+  }
+
+  /* ============================================================
+     BOOT — open on a live, already-populated grid
+     ============================================================ */
+  function start(){
+    buildDom();
+    buildPaytable();
+    S.grid = newGrid(buildStrip(false));
+    clearFresh();
+    paint();
+    render();
+  }
+
+  if(window.claude && window.claude.hot && window.claude.hot.ready){
+    window.claude.hot.snapshot && window.claude.hot.snapshot(function(){
+      return { credit:S.credit, betIndex:S.betIndex, ante:S.ante, sound:S.sound };
+    });
+    window.claude.hot.ready(function(data){
+      start();
+      if(data && typeof data.credit === "number"){
+        S.credit = data.credit;
+        S.betIndex = data.betIndex != null ? data.betIndex : S.betIndex;
+        S.ante = !!data.ante;
+        S.sound = data.sound !== false;
+        render();
+      }
+    });
+  }else{
+    start();
+  }
+})();
+</script>
+
+</body>
+</html>
