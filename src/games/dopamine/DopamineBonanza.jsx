@@ -1,5 +1,5 @@
 import { useEffect, useReducer, useRef, useCallback, useMemo } from "react";
-import { store, useStore, money } from "../../store/store.js";
+import { wallet, useStore, money } from "../../store/store.js";
 import SFX from "./sfx.js";
 import { renderSymbol } from "./art.js";
 import {
@@ -15,6 +15,7 @@ import "./dopamine.css";
    forces a React re-render from that ref. Timers are tracked so leaving
    the page mid-spin cancels everything cleanly. */
 
+const W = wallet("dopamine-bonanza");
 class Cancelled extends Error {}
 const STRIP_LEN = 7; /* symbols visible in a spinning reel strip (rendered twice for a seamless loop) */
 
@@ -124,7 +125,7 @@ export default function DopamineBonanza() {
     st.busy = true;
     st.winbar = null; st.flash = null; st.totmult = null;
     if (!isFree) {
-      store.addCredit(-stake());
+      if (!W.debit(stake(), st.ante ? "spin · double chance" : "spin")) { st.busy = false; render(); return; }
       st.lastWin = 0;
     }
     render();
@@ -204,7 +205,7 @@ export default function DopamineBonanza() {
     const scat = countScatters(st.grid);
 
     if (spinWin > 0) {
-      store.addCredit(spinWin);
+      W.payout(spinWin, isFree ? "free spin" : "spin");
       st.lastWin = isFree ? st.lastWin + spinWin : spinWin;
       if (isFree) st.freeWin += spinWin;
       render();
@@ -240,7 +241,7 @@ export default function DopamineBonanza() {
       render();
     }
 
-    if (st.auto > 0 && store.credit() >= stake()) {
+    if (st.auto > 0 && W.credit() >= stake()) {
       st.auto--;
       render();
       await sleep(220);
@@ -270,7 +271,7 @@ export default function DopamineBonanza() {
     const st = s();
     if (st.busy) { if (st.spinning.some(Boolean)) st.skip = true; return; }  /* tap again to slam the reels */
     if (st.free > 0) { guard(runSpin(true)); return; }
-    if (store.credit() < stake()) return;
+    if (W.credit() < stake()) return;
     guard(runSpin(false));
   };
   const onBet = (dir) => {
@@ -285,8 +286,7 @@ export default function DopamineBonanza() {
     const st = s();
     if (st.busy || st.free > 0) return;
     const cost = bet() * (isSuper ? SUPER_FS_COST : FS_COST);
-    if (store.credit() < cost) return;
-    store.addCredit(-cost); st.lastWin = 0; st.busy = true; render();
+    if (!W.debit(cost, isSuper ? "buy super free spins" : "buy free spins")) return; st.lastWin = 0; st.busy = true; render();
     guard((async () => { await triggerFeature(isSuper, 0); st.busy = false; await runSpin(true); })());
   };
   const onAuto = () => {
@@ -300,7 +300,7 @@ export default function DopamineBonanza() {
     const st = s();
     if (st.busy) return;
     SFX.click(); SFX.music.stop();
-    store.resetCredit();
+    W.reset();
     st.lastWin = 0; st.auto = 0; st.free = 0; st.winbar = null; st.flash = null; st.totmult = null;
     render();
   };

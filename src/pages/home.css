@@ -12,6 +12,14 @@
   filter: drop-shadow(0 0 14px rgba(255,45,135,.55)) drop-shadow(0 3px 0 rgba(0,0,0,.6));
 }
 .home-sub { font-size: 10px; letter-spacing: .3em; text-transform: uppercase; color: var(--cy); margin-top: 6px; opacity: .85; }
+.home-right { display: flex; gap: 8px; align-items: stretch; }
+.home-net {
+  display: flex; flex-direction: column; align-items: flex-end; gap: 2px; text-decoration: none;
+  border: 2px solid var(--edge); border-radius: 12px; padding: 8px 14px;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel)); transition: border-color .12s ease;
+}
+.home-net:hover { border-color: var(--cy); }
+.home-net.up .v { color: var(--lime); } .home-net.down .v { color: var(--mag); }
 .home-wallet {
   display: flex; flex-direction: column; align-items: flex-end; gap: 2px;
   border: 2px solid var(--edge); border-radius: 12px; padding: 8px 14px;

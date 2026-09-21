@@ -75,7 +75,7 @@ export function MinesCover() {
       </g>
       <Title y={318} size={62} fill="url(#mtg)">MINES</Title>
       <text x="150" y="352" textAnchor="middle" fontFamily="Archivo, sans-serif" fontSize="11" letterSpacing="4" fill="#FF2D87">FIND THE GEMS</text>
-      <text x="150" y="376" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fontWeight="700" fill="#FFC63B">99% RTP</text>
+      <text x="150" y="376" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fontWeight="700" fill="#FFC63B">97% RTP</text>
     </svg>
   );
 }
@@ -110,7 +110,7 @@ export function CrashCover() {
       <text x="60" y="66" fontFamily="Bungee, Impact, sans-serif" fontSize="30" fill="#FFC63B">12.48×</text>
       <Title y={318} size={62} fill="url(#ctg)">CRASH</Title>
       <text x="150" y="352" textAnchor="middle" fontFamily="Archivo, sans-serif" fontSize="11" letterSpacing="4" fill="#29E8DE">CASH OUT IN TIME</text>
-      <text x="150" y="376" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fontWeight="700" fill="#FFC63B">99% RTP</text>
+      <text x="150" y="376" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="13" fontWeight="700" fill="#FFC63B">97% RTP</text>
     </svg>
   );
 }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { store, useStore, money } from "../../store/store.js";
+import { wallet, useStore, money } from "../../store/store.js";
 import { tone, noise, bell, step, resume, ui } from "../../audio/synth.js";
 import { Plus, Minus, Reset, Ball, Info } from "../../components/Icons.jsx";
 import "../../styles/games.css";
@@ -21,6 +21,8 @@ const TABLE = {
 };
 const mults = (rows, risk) => TABLE[rows][risk].map((m) => Math.round(m * RTP * 100) / 100);
 const ROW_MS = 150;
+
+const W = wallet("plinko");
 
 const SFX = {
   drop() { tone({ freq: 700, to: 300, dur: 0.1, gain: 0.08, type: "triangle" }); },
@@ -62,7 +64,7 @@ export default function Plinko() {
   function drop() {
     resume();
     if (credit < bet || balls.current.length >= 12) return;
-    store.addCredit(-bet);
+    if (!W.debit(bet, `${cfg.current.rows} rows ${cfg.current.risk}`)) return;
     const R = cfg.current.rows;
     const path = Array.from({ length: R }, () => (Math.random() < 0.5 ? 0 : 1));
     balls.current.push({ path, t0: performance.now(), bet, rows: R, risk: cfg.current.risk, lastRow: -1 });
@@ -133,7 +135,7 @@ export default function Plinko() {
     const k = b.path.reduce((a, d) => a + d, 0);
     const m = mults(b.rows, b.risk)[k];
     const win = Math.round(b.bet * m * 100) / 100;
-    if (win > 0) store.addCredit(win);
+    if (win > 0) W.payout(win, `${m}× bucket`);
     setLastWin(win);
     setHitBucket({ k, rows: b.rows, at: performance.now() });
     setHistory((h) => [m, ...h].slice(0, 16));
@@ -195,7 +197,7 @@ export default function Plinko() {
               <div><div className="k">Top pay</div><div className="v gold">{Math.max(...table)}×</div></div>
             </div>
             <button className="g-main" onClick={drop} disabled={credit < bet || inFlight >= 12}><Ball size={16} /> Drop ball · {money(bet)}</button>
-            <button className="ghost icon" onClick={() => { if (!inFlight) { store.resetCredit(); ui.click(); } }} disabled={inFlight > 0}><Reset size={14} /> Reset Credit</button>
+            <button className="ghost icon" onClick={() => { if (!inFlight) { W.reset(); ui.click(); } }} disabled={inFlight > 0}><Reset size={14} /> Reset Credit</button>
           </aside>
 
           <div className="g-screen pk-screen">

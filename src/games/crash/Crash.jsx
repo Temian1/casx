@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { store, useStore, money } from "../../store/store.js";
+import { wallet, useStore, money } from "../../store/store.js";
 import { tone, noise, bell, step, resume, ui } from "../../audio/synth.js";
 import { Plus, Minus, Reset, Plane as PlaneIcon, Cash, Timer, Info } from "../../components/Icons.jsx";
 import "./crash.css";
@@ -18,6 +18,8 @@ function drawCrashPoint() {
   return Math.max(1, Math.floor((EDGE / (1 - u)) * 100) / 100);
 }
 const multAt = (ms) => Math.exp(GROWTH * ms);
+
+const W = wallet("crash");
 
 const SFX = {
   takeoff() {
@@ -65,7 +67,7 @@ export default function Crash() {
   function launch() {
     resume();
     if (flying || credit < bet) return;
-    store.addCredit(-bet);
+    if (!W.debit(bet, "round")) return;
     setLastWin(0);
     setCashed(null);
     setMult(1);
@@ -109,7 +111,7 @@ export default function Crash() {
     const m = Math.floor(at * 100) / 100;
     const win = Math.round(r.bet * m * 100) / 100;
     r.cashed = { at: m, win };
-    store.addCredit(win);
+    W.payout(win, `cashed out @ ${m.toFixed(2)}×`);
     setLastWin(win);
     setCashed(r.cashed);
     SFX.cash(m);
@@ -254,7 +256,7 @@ export default function Crash() {
                 <Cash size={16} /> {cashed ? "Cashed Out" : "Cash Out · " + money(liveValue)}
               </button>
             )}
-            <button className="ghost icon" onClick={() => { if (!flying) { store.resetCredit(); ui.click(); } }} disabled={flying}><Reset size={14} /> Reset Credit</button>
+            <button className="ghost icon" onClick={() => { if (!flying) { W.reset(); ui.click(); } }} disabled={flying}><Reset size={14} /> Reset Credit</button>
           </aside>
         </div>
 

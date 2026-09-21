@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { store, useStore, money } from "../../store/store.js";
+import { wallet, useStore, money } from "../../store/store.js";
 import { tone, noise, bell, step, resume, ui } from "../../audio/synth.js";
 import { Plus, Minus, Reset, Cards, Hand, Double, Check, Info } from "../../components/Icons.jsx";
 import "../../styles/games.css";
@@ -29,6 +29,8 @@ function handValue(hand) {
   return { total, soft: aces > 0 && total <= 21 };
 }
 const isBlackjack = (h) => h.length === 2 && handValue(h).total === 21;
+
+const W = wallet("blackjack");
 
 const SFX = {
   deal() { noise({ from: 2500, to: 700, dur: 0.07, gain: 0.08 }); tone({ freq: 240, to: 180, dur: 0.05, gain: 0.05, type: "triangle" }); },
@@ -71,7 +73,7 @@ export default function Blackjack() {
   async function deal() {
     resume();
     if (busy || canAct || credit < bet) return;
-    store.addCredit(-bet);
+    if (!W.debit(bet, "hand")) return;
     SFX.chip();
     setStake(bet); setOutcome(null); setLastWin(0);
     setPlayer([]); setDealer([]); setHole(true);
@@ -106,7 +108,7 @@ export default function Blackjack() {
   async function double() {
     if (!canDouble) return;
     resume();
-    store.addCredit(-stake);
+    if (!W.debit(stake, "double")) return;
     SFX.chip();
     const total = stake * 2;
     setStake(total);
@@ -148,7 +150,7 @@ export default function Blackjack() {
       case "bust": title = "Bust"; sub = `${handValue(p).total} — over 21`; SFX.bust(); break;
       default: title = "Dealer wins"; sub = isBlackjack(d) ? "dealer blackjack" : `${handValue(d).total} beats ${handValue(p).total}`; SFX.bust();
     }
-    if (amount > 0) store.addCredit(amount);
+    if (amount > 0) W.payout(amount, kind);
     const net = amount - wager;
     setLastWin(amount);
     setOutcome({ title, sub, amount: amount > 0 ? amount : null, kind: net > 0 ? "win" : net < 0 ? "lose" : "push" });
@@ -228,7 +230,7 @@ export default function Blackjack() {
             ) : (
               <button className="g-main" onClick={deal} disabled={busy || credit < bet}><Cards size={16} /> {phase === "done" ? "Deal again" : "Deal"} · {money(bet)}</button>
             )}
-            <button className="ghost icon" onClick={() => { if (!busy && !canAct) { store.resetCredit(); ui.click(); } }} disabled={busy || canAct}><Reset size={14} /> Reset Credit</button>
+            <button className="ghost icon" onClick={() => { if (!busy && !canAct) { W.reset(); ui.click(); } }} disabled={busy || canAct}><Reset size={14} /> Reset Credit</button>
           </aside>
         </div>
 

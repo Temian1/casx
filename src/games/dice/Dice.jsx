@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { store, useStore, money } from "../../store/store.js";
+import { wallet, useStore, money } from "../../store/store.js";
 import { tone, noise, bell, step, resume, ui } from "../../audio/synth.js";
 import { Plus, Minus, Reset, Dice as DiceIcon, Info } from "../../components/Icons.jsx";
 import "../../styles/games.css";
@@ -14,6 +14,8 @@ const RTP = 0.96;
 
 function chanceFor(target, over) { return over ? (99.99 - target) / 100 : target / 100; }
 function multFor(target, over) { return Math.floor((RTP / chanceFor(target, over)) * 10000) / 10000; }
+
+const W = wallet("dice");
 
 const SFX = {
   tick(i) { tone({ freq: 380 + (i % 4) * 60, dur: 0.03, gain: 0.05, type: "square" }); },
@@ -42,7 +44,7 @@ export default function Dice() {
   function roll() {
     resume();
     if (rolling || credit < bet) return;
-    store.addCredit(-bet);
+    if (!W.debit(bet, `${over ? "over" : "under"} ${target}`)) return;
     setRolling(true); setResult(null);
     const r = Math.floor(Math.random() * 10000) / 100;
     const win = over ? r > target : r < target;
@@ -56,7 +58,7 @@ export default function Dice() {
         clearInterval(timer.current);
         setShown(r);
         const amount = win ? payout : 0;
-        if (win) store.addCredit(amount);
+        if (win) W.payout(amount, `rolled ${r.toFixed(2)}`);
         setResult({ roll: r, win, amount });
         setHistory((h) => [{ r, win }, ...h].slice(0, 16));
         setRolling(false);
@@ -113,7 +115,7 @@ export default function Dice() {
               <div><div className="k">Profit</div><div className="v lime">{money(payout - bet)}</div></div>
             </div>
             <button className="g-main" onClick={roll} disabled={rolling || credit < bet}><DiceIcon size={16} /> Roll · {money(bet)}</button>
-            <button className="ghost icon" onClick={() => { if (!rolling) { store.resetCredit(); ui.click(); } }} disabled={rolling}><Reset size={14} /> Reset Credit</button>
+            <button className="ghost icon" onClick={() => { if (!rolling) { W.reset(); ui.click(); } }} disabled={rolling}><Reset size={14} /> Reset Credit</button>
           </aside>
 
           <div className="g-screen dc-screen">

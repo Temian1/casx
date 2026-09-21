@@ -1,6 +1,21 @@
 import { lazy } from "react";
 import { DopamineCover, MinesCover, CrashCover } from "../components/Covers.jsx";
 import { DiceCover, PlinkoCover, BlackjackCover } from "../components/CoversMore.jsx";
+import SlotCover from "../components/SlotCover.jsx";
+import { cfg as neonFruits } from "./slots/games/neonFruits.config.js";
+import { cfg as pharaohsVault } from "./slots/games/pharaohsVault.config.js";
+import { cfg as candyReactor } from "./slots/games/candyReactor.config.js";
+import { cfg as pirateGold } from "./slots/games/pirateGold.config.js";
+import { cfg as dragonFortune } from "./slots/games/dragonFortune.config.js";
+import { cfg as holdAndWin } from "./slots/games/holdAndWin.config.js";
+
+/* Config-driven slots share SlotMachine; each entry is derived from its config. */
+const slot = (cfg, file) => ({
+  id: cfg.id, title: cfg.title, tagline: cfg.tagline, blurb: cfg.blurb, accent: cfg.accent,
+  tags: [...cfg.tags, cfg.rtp + "% RTP"],
+  Cover: () => <SlotCover cfg={cfg} />,
+  component: lazy(() => import(`./slots/games/${file}.jsx`)),
+});
 
 /* Every playable game in the lobby. `component` is lazy so each game's
    code and CSS only load when it is opened. */
@@ -66,5 +81,15 @@ export const GAMES = [
     component: lazy(() => import("./blackjack/Blackjack.jsx")),
   },
 ];
+
+export const SLOTS = [
+  slot(neonFruits, "neonFruits"),
+  slot(pharaohsVault, "pharaohsVault"),
+  slot(candyReactor, "candyReactor"),
+  slot(pirateGold, "pirateGold"),
+  slot(dragonFortune, "dragonFortune"),
+  slot(holdAndWin, "holdAndWin"),
+];
+GAMES.splice(1, 0, ...SLOTS);
 
 export const gameById = (id) => GAMES.find((g) => g.id === id);

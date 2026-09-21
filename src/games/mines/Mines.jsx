@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { store, useStore, money } from "../../store/store.js";
+import { wallet, useStore, money } from "../../store/store.js";
 import { tone, noise, bell, step, resume, ui } from "../../audio/synth.js";
 import { Plus, Minus, Reset, Shuffle, Cash, Play as PlayIcon, Bomb as BombIco, Info } from "../../components/Icons.jsx";
 import "./mines.css";
@@ -29,6 +29,8 @@ function placeMines(count) {
   }
   return new Set(idx.slice(0, count));
 }
+
+const W = wallet("mines");
 
 const SFX = {
   gem(n) {
@@ -71,7 +73,7 @@ export default function Mines() {
   function start() {
     resume();
     if (live || credit < bet) return;
-    store.addCredit(-bet);
+    if (!W.debit(bet, `${mines} mines`)) return;
     setBombs(placeMines(mines));
     setRevealed(new Set());
     setHit(null);
@@ -103,7 +105,7 @@ export default function Mines() {
   function settle(count) {
     const m = multiplierFor(mines, count);
     const win = Math.round(bet * m * 100) / 100;
-    store.addCredit(win);
+    W.payout(win, `${count} gems · ${m.toFixed(2)}×`);
     setLastWin(win);
     setPhase("won");
     setMsg({ title: `${m.toFixed(2)}×`, sub: "cashed out", amount: win });
@@ -177,7 +179,7 @@ export default function Mines() {
                 <button className="ghost icon" onClick={randomPick}><Shuffle size={14} /> Random Tile</button>
               </>
             )}
-            <button className="ghost icon" onClick={() => { if (!live) { store.resetCredit(); ui.click(); } }} disabled={live}><Reset size={14} /> Reset Credit</button>
+            <button className="ghost icon" onClick={() => { if (!live) { W.reset(); ui.click(); } }} disabled={live}><Reset size={14} /> Reset Credit</button>
           </aside>
 
           <div className="mn-board-wrap">

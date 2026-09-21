@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import { GAMES } from "../games/registry.jsx";
-import { useStore, money } from "../store/store.js";
+import { store, useStore, money } from "../store/store.js";
 import { ui, resume } from "../audio/synth.js";
-import { Play as PlayIcon, Wallet, X } from "../components/Icons.jsx";
+import { Play as PlayIcon, Wallet, X, Trophy } from "../components/Icons.jsx";
 import "./home.css";
 
 export default function Home() {
   const [pending, setPending] = useState(null);
   const { credit } = useStore();
+  const totals = store.totals();
   const navigate = useNavigate();
 
   const open = (g) => { resume(); ui.click(); setPending(g); };
@@ -28,9 +29,15 @@ export default function Home() {
           <span className="home-mark">CASX</span>
           <span className="home-sub">Play-money arcade · no sign-up</span>
         </div>
-        <div className="home-wallet">
-          <span className="k"><Wallet size={12} /> Credit</span>
-          <span className="v credit">{money(credit)}</span>
+        <div className="home-right">
+          <Link to="/history" className={"home-net " + (totals.net >= 0 ? "up" : "down")} onClick={() => ui.click()} title="Play history">
+            <span className="k"><Trophy size={12} /> Earnings</span>
+            <span className="v">{(totals.net >= 0 ? "+" : "−") + money(Math.abs(totals.net))}</span>
+          </Link>
+          <div className="home-wallet">
+            <span className="k"><Wallet size={12} /> Credit</span>
+            <span className="v credit">{money(credit)}</span>
+          </div>
         </div>
       </header>
 
