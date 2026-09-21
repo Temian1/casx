@@ -79,24 +79,39 @@ input[type=range]:disabled { opacity: .4; }
   right: max(20px, env(safe-area-inset-right));
   bottom: max(20px, env(safe-area-inset-bottom));
   z-index: 1000;
-  display: grid;
-  width: 58px;
-  height: 58px;
-  place-items: center;
-  border: 2px solid rgba(255, 255, 255, .3);
-  border-radius: 50%;
-  background: #25d366;
-  color: #fff;
-  box-shadow: 0 8px 28px rgba(0, 0, 0, .4), 0 0 20px rgba(37, 211, 102, .25);
-  transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease;
+  display: flex;
+  min-height: 56px;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 17px 9px 11px;
+  border: 2px solid var(--mag);
+  border-radius: 16px;
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  color: var(--lime);
+  text-decoration: none;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, .48), 0 0 24px rgba(255, 45, 135, .3);
+  transition: transform .16s ease, box-shadow .16s ease, border-color .16s ease;
 }
 .whatsapp-button:hover {
   transform: translateY(-3px) scale(1.04);
-  background: #20bd5a;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, .48), 0 0 26px rgba(37, 211, 102, .4);
+  border-color: var(--cy);
+  box-shadow: 0 14px 36px rgba(0, 0, 0, .55), 0 0 28px rgba(41, 232, 222, .42);
 }
 .whatsapp-button:active { transform: translateY(0) scale(.97); }
-.whatsapp-button svg { width: 32px; height: 32px; fill: currentColor; }
+.whatsapp-button svg {
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  fill: currentColor;
+  filter: drop-shadow(0 0 8px rgba(184, 255, 60, .45));
+}
+.whatsapp-button span {
+  font-family: var(--display);
+  font-size: 12px;
+  letter-spacing: .08em;
+  text-transform: uppercase;
+  color: var(--txt);
+}
 
 @media (max-width: 540px) {
   .whatsapp-button {
@@ -104,7 +119,12 @@ input[type=range]:disabled { opacity: .4; }
     bottom: max(14px, env(safe-area-inset-bottom));
     width: 54px;
     height: 54px;
+    min-height: 54px;
+    justify-content: center;
+    padding: 0;
+    border-radius: 14px;
   }
+  .whatsapp-button span { display: none; }
 }
 
 @media (prefers-reduced-motion: reduce) {
