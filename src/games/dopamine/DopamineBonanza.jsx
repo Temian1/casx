@@ -3,16 +3,20 @@ import { store, useStore, money } from "../../store/store.js";
 import SFX from "./sfx.js";
 import { renderSymbol } from "./art.js";
 import {
-  SYMBOLS, SCATTER, MULT_ID, COLS, ROWS, BETS,
-  buildStrip, newGrid, clearFresh, evaluate, countScatters, sumOrbs, tumble, pickOrb, winTier,
+  SYMBOLS, SCATTER, MULT_ID, COLS, ROWS, BETS, MAX_WIN_X,
+  ORB_CHANCE, SUPER_ORB_CHANCE, FS_SPINS, SUPER_FS_SPINS, FS_COST, SUPER_FS_COST,
+  buildStrip, newGrid, clearFresh, evaluate, countScatters, sumOrbs, tumble, pickOrb, winTier, pick,
 } from "./engine.js";
+import { Spin as SpinIcon, Plus, Minus, Bolt, Stop, Reset, Cart, Star, Info } from "../../components/Icons.jsx";
 import "./dopamine.css";
 
-/* The spin cycle is an async sequence of grid mutations and pauses, just
-   like the original. All game state lives in a mutable ref (S) and every
-   "paint"/"render" call simply forces a React re-render from that ref. */
+/* The spin cycle is an async sequence of grid mutations and pauses. All
+   game state lives in a mutable ref (S); every paint()/render() call just
+   forces a React re-render from that ref. Timers are tracked so leaving
+   the page mid-spin cancels everything cleanly. */
 
 class Cancelled extends Error {}
+const STRIP_LEN = 7; /* symbols visible in a spinning reel strip (rendered twice for a seamless loop) */
 
 function initialState() {
   const grid = newGrid(buildStrip(false));
@@ -21,8 +25,8 @@ function initialState() {
     betIndex: 4, ante: false, grid, busy: false, lastWin: 0,
     free: 0, freeTotal: 0, superMode: false, freeWin: 0, auto: 0,
     /* presentation */
-    paintId: 1, blur: false, winCells: new Set(), popCells: new Set(),
-    flash: null, winbar: null, totmult: null,
+    paintId: 1, spinning: Array(COLS).fill(false), reelSyms: [], skip: false,
+    winCells: new Set(), popCells: new Set(), flash: null, winbar: null, totmult: null,
   };
 }
 
@@ -30,16 +34,23 @@ export default function DopamineBonanza() {
   const S = useRef(null);
   if (!S.current) S.current = initialState();
   const alive = useRef(true);
+  const timers = useRef(new Set());
   const [, force] = useReducer((x) => x + 1, 0);
   const { credit } = useStore();
 
+  const later = useCallback((fn, ms) => {
+    const id = setTimeout(() => { timers.current.delete(id); if (alive.current) fn(); }, ms);
+    timers.current.add(id);
+  }, []);
   const sleep = useCallback((ms) => new Promise((res, rej) => {
-    setTimeout(() => (alive.current ? res() : rej(new Cancelled())), ms);
+    const id = setTimeout(() => { timers.current.delete(id); if (alive.current) res(); else rej(new Cancelled()); }, ms);
+    timers.current.add(id);
   }), []);
 
   useEffect(() => {
     alive.current = true;
-    return () => { alive.current = false; SFX.music.stop(); };
+    const t = timers.current;
+    return () => { alive.current = false; t.forEach(clearTimeout); t.clear(); SFX.music.stop(); };
   }, []);
 
   /* ---------- helpers bound to the ref ---------- */
@@ -48,10 +59,9 @@ export default function DopamineBonanza() {
   const stake = () => (s().ante ? bet() * 1.25 : bet());
   const render = () => { if (alive.current) force(); };
 
-  function paint(opts = {}) {
+  function paint() {
     const st = s();
     st.paintId++;
-    st.blur = !!opts.blur;
     st.winCells = new Set();
     st.popCells = new Set();
     for (const col of st.grid) for (const cell of col) if (cell.fresh) cell.born = st.paintId;
@@ -79,6 +89,35 @@ export default function DopamineBonanza() {
     showWinbar(amount);
   }
 
+  /* Wait in small slices so a tap on the spin button can cut the wait short */
+  async function waitSkippable(ms) {
+    const st = s();
+    let left = ms;
+    while (left > 0 && !st.skip) { const d = Math.min(40, left); await sleep(d); left -= d; }
+  }
+
+  /* ---------- reel spin: all columns whirl, then slam in one at a time ---------- */
+  async function spinReels(strip) {
+    const st = s();
+    st.skip = false;
+    st.reelSyms = Array.from({ length: COLS }, () => Array.from({ length: STRIP_LEN }, () => pick(strip)));
+    st.spinning = Array(COLS).fill(true);
+    st.winCells = new Set(); st.popCells = new Set();
+    render();
+    SFX.spinStart();
+    for (let i = 0; i < 4; i++) { later(() => SFX.reelLoop(i), i * 140); }
+    await waitSkippable(720);
+    for (let c = 0; c < COLS; c++) {
+      st.spinning[c] = false;
+      st.paintId++;
+      for (const cell of st.grid[c]) cell.born = st.paintId;
+      render();
+      SFX.reelStop(c);
+      await waitSkippable(st.skip ? 40 : 130);
+    }
+    await sleep(260);
+  }
+
   /* ---------- core spin cycle ---------- */
   async function runSpin(isFree) {
     const st = s();
@@ -89,39 +128,28 @@ export default function DopamineBonanza() {
       st.lastWin = 0;
     }
     render();
-    SFX.spinStart();
 
     const strip = buildStrip(st.ante);
-    /* Orbs only exist inside the feature. Super mode doubles the rate. */
-    const orbChance = isFree ? (st.superMode ? 0.062 : 0.031) : 0;
+    /* Orbs only exist inside the feature. */
+    const orbChance = isFree ? (st.superMode ? SUPER_ORB_CHANCE : ORB_CHANCE) : 0;
 
-    /* reel blur-in */
-    for (let f = 0; f < 3; f++) {
-      st.grid = newGrid(strip);
-      paint({ blur: true });
-      SFX.reelLoop(f);
-      await sleep(70);
-    }
-
-    /* final landing grid */
+    /* final landing grid is decided up front; the reels just reveal it */
     st.grid = newGrid(strip);
     const orbsLanded = [];
     if (orbChance > 0) {
       for (let c = 0; c < COLS; c++) for (let r = 0; r < ROWS; r++) {
         if (Math.random() < orbChance) {
-          st.grid[c][r].m = pickOrb(); st.grid[c][r].s = MULT_ID;
+          st.grid[c][r].m = pickOrb(st.superMode); st.grid[c][r].s = MULT_ID;
           orbsLanded.push(st.grid[c][r].m);
         }
       }
     }
-    paint();
-    for (let sc = 0; sc < COLS; sc++) SFX.reelStop(sc);
-    await sleep(320);
+    await spinReels(strip);
     clearFresh(st.grid);
 
     const scatNow = countScatters(st.grid);
-    for (let sn = 1; sn <= Math.min(scatNow, 6); sn++) setTimeout(() => SFX.scatterHit(sn), sn * 140);
-    orbsLanded.forEach((v, oi) => setTimeout(() => SFX.orbLand(v), 120 + oi * 110));
+    for (let sn = 1; sn <= Math.min(scatNow, 6); sn++) later(() => SFX.scatterHit(sn), sn * 140);
+    orbsLanded.forEach((v, oi) => later(() => SFX.orbLand(v), 120 + oi * 110));
     if (scatNow >= 3 || orbsLanded.length) await sleep(360);
 
     /* tumble loop */
@@ -144,7 +172,7 @@ export default function DopamineBonanza() {
       await sleep(210);
 
       const before = sumOrbs(st.grid);
-      st.grid = tumble(st.grid, wins, strip, orbChance);
+      st.grid = tumble(st.grid, wins, strip, orbChance, st.superMode);
       paint();
       SFX.tumbleLand();
       const after = sumOrbs(st.grid);
@@ -166,6 +194,13 @@ export default function DopamineBonanza() {
       st.totmult = orbTotal + "× TOTAL"; render();
     }
 
+    /* max win cap */
+    if (spinWin > MAX_WIN_X * bet()) {
+      spinWin = MAX_WIN_X * bet();
+      showWinbar(spinWin, "MAX WIN");
+      await sleep(400);
+    }
+
     const scat = countScatters(st.grid);
 
     if (spinWin > 0) {
@@ -180,7 +215,7 @@ export default function DopamineBonanza() {
       st.free--;
       render();
       if (scat >= 3) {
-        st.free += 5;
+        st.free += 5; st.freeTotal += 5;
         SFX.retrigger();
         flash("+5 Free Spins", "retriggered");
         await sleep(1200);
@@ -217,9 +252,10 @@ export default function DopamineBonanza() {
 
   async function triggerFeature(isSuper, scat) {
     const st = s();
-    st.free = 10; st.freeTotal = 10; st.superMode = !!isSuper; st.freeWin = 0;
+    st.free = isSuper ? SUPER_FS_SPINS : FS_SPINS;
+    st.freeTotal = st.free; st.superMode = !!isSuper; st.freeWin = 0;
     SFX.fanfare(!!isSuper);
-    flash(isSuper ? "Super Free Spins" : "Free Spins", scat ? scat + " dopamine molecules" : "feature purchased");
+    flash(isSuper ? "Super Free Spins" : "Free Spins", scat ? scat + " dopamine molecules" : st.free + " spins purchased");
     await sleep(1500);
     hideFlash();
     SFX.music.start();
@@ -232,7 +268,7 @@ export default function DopamineBonanza() {
   const onSpin = () => {
     SFX.resume();
     const st = s();
-    if (st.busy) return;
+    if (st.busy) { if (st.spinning.some(Boolean)) st.skip = true; return; }  /* tap again to slam the reels */
     if (st.free > 0) { guard(runSpin(true)); return; }
     if (store.credit() < stake()) return;
     guard(runSpin(false));
@@ -247,8 +283,8 @@ export default function DopamineBonanza() {
   const onBuy = (isSuper) => {
     SFX.resume(); SFX.click();
     const st = s();
-    if (st.busy) return;
-    const cost = bet() * (isSuper ? 500 : 100);
+    if (st.busy || st.free > 0) return;
+    const cost = bet() * (isSuper ? SUPER_FS_COST : FS_COST);
     if (store.credit() < cost) return;
     store.addCredit(-cost); st.lastWin = 0; st.busy = true; render();
     guard((async () => { await triggerFeature(isSuper, 0); st.busy = false; await runSpin(true); })());
@@ -281,26 +317,27 @@ export default function DopamineBonanza() {
   const st = s();
   const locked = st.busy || st.free > 0;
   const b = bet();
+  const isSpinning = st.spinning.some(Boolean);
 
   return (
     <div className="db">
       <div className="wrap">
         <div className="logo">
           <h1>Dopamine Bonanza</h1>
-          <div className="sub">6 × 5 &nbsp;·&nbsp; Pays Anywhere &nbsp;·&nbsp; Tumble</div>
+          <div className="sub">6 × 5 &nbsp;·&nbsp; Pays Anywhere &nbsp;·&nbsp; Tumble &nbsp;·&nbsp; Max {MAX_WIN_X.toLocaleString()}×</div>
         </div>
 
         <div className="stage">
           <div className="rail">
-            <button className="buy fs" onClick={() => onBuy(false)} disabled={locked || credit < b * 100}>
-              <b>Buy Free Spins</b>
-              <span className="amt">{money(b * 100)}</span>
-              <span className="tiny">10 spins · 100× bet</span>
+            <button className="buy fs" onClick={() => onBuy(false)} disabled={locked || credit < b * FS_COST}>
+              <b><Cart size={12} /> Buy Free Spins</b>
+              <span className="amt">{money(b * FS_COST)}</span>
+              <span className="tiny">{FS_SPINS} spins · {FS_COST}× bet</span>
             </button>
-            <button className="buy sfs" onClick={() => onBuy(true)} disabled={locked || credit < b * 500}>
-              <b>Buy Super Free Spins</b>
-              <span className="amt">{money(b * 500)}</span>
-              <span className="tiny">10 spins · richer orbs</span>
+            <button className="buy sfs" onClick={() => onBuy(true)} disabled={locked || credit < b * SUPER_FS_COST}>
+              <b><Star size={12} /> Super Free Spins</b>
+              <span className="amt">{money(b * SUPER_FS_COST)}</span>
+              <span className="tiny">{SUPER_FS_SPINS} spins · richer orbs · {SUPER_FS_COST}× bet</span>
             </button>
             <div className="ante">
               <span className="hd">Double Chance</span>
@@ -339,27 +376,25 @@ export default function DopamineBonanza() {
             <div className="meter"><div className="k">Last Win</div><div className="v won">{money(st.lastWin)}</div></div>
           </div>
           <div className="spinwrap">
-            <button className={"spin" + (st.busy ? " busy" : "")} aria-label="Spin" onClick={onSpin}
-              disabled={st.busy || (st.free === 0 && credit < stake())}>
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round">
-                <path d="M20.5 12a8.5 8.5 0 1 1-2.6-6.1" /><path d="M20.6 3.6v5.2h-5.2" />
-              </svg>
+            <button className={"spin" + (st.busy ? " busy" : "") + (isSpinning ? " reels" : "")} aria-label={isSpinning ? "Stop reels" : "Spin"} onClick={onSpin}
+              disabled={(st.busy && !isSpinning) || (!st.busy && st.free === 0 && credit < stake())}>
+              {isSpinning ? <Stop size={30} /> : <SpinIcon size={34} />}
             </button>
           </div>
           <div className="betbox">
-            <button className="step" aria-label="Lower bet" onClick={() => onBet(-1)} disabled={locked || st.betIndex <= 0}>−</button>
+            <button className="step" aria-label="Lower bet" onClick={() => onBet(-1)} disabled={locked || st.betIndex <= 0}><Minus size={16} /></button>
             <div className="meter" style={{ textAlign: "center", minWidth: 86 }}>
               <div className="k">Bet</div><div className="v">{money(b)}</div>
             </div>
-            <button className="step" aria-label="Raise bet" onClick={() => onBet(1)} disabled={locked || st.betIndex >= BETS.length - 1}>+</button>
+            <button className="step" aria-label="Raise bet" onClick={() => onBet(1)} disabled={locked || st.betIndex >= BETS.length - 1}><Plus size={16} /></button>
           </div>
         </div>
 
         <div className="utils">
-          <button className="ghost" aria-pressed={st.auto > 0 ? "true" : "false"} onClick={onAuto}>
-            {st.auto > 0 ? "Stop (" + st.auto + ")" : "Autoplay 25"}
+          <button className="ghost icon" aria-pressed={st.auto > 0 ? "true" : "false"} onClick={onAuto}>
+            {st.auto > 0 ? <><Stop size={14} /> Stop ({st.auto})</> : <><Bolt size={14} /> Autoplay 25</>}
           </button>
-          <button className="ghost" onClick={onReset} disabled={st.busy}>Reset Credit</button>
+          <button className="ghost icon" onClick={onReset} disabled={st.busy}><Reset size={14} /> Reset Credit</button>
         </div>
 
         <Paytable />
@@ -375,12 +410,17 @@ function Grid({ st }) {
   return (
     <div className="grid" aria-label="Slot reels">
       {st.grid.map((col, c) => (
-        <div className="col" key={c}>
-          {col.map((cell, r) => {
+        <div className={"col" + (st.spinning[c] ? " whirl" : "")} key={c}>
+          {st.spinning[c] ? (
+            <div className="strip" aria-hidden="true">
+              {[...st.reelSyms[c], ...st.reelSyms[c]].map((id, i) => (
+                <div className="cell blur" key={i}><Symbol id={id} /></div>
+              ))}
+            </div>
+          ) : col.map((cell, r) => {
             const k = c + ":" + r;
-            const isDrop = cell.born === st.paintId && !st.blur;
+            const isDrop = cell.born === st.paintId;
             const cls = ["cell",
-              st.blur ? "blur" : "",
               isDrop ? "drop" : "",
               !cell.m && cell.s === SCATTER.id ? "scat" : "",
               st.winCells.has(k) ? "win" : "",
@@ -407,7 +447,7 @@ function Symbol({ id }) {
 function Paytable() {
   return (
     <details className="pt">
-      <summary>Paytable &amp; Rules</summary>
+      <summary><Info size={13} /> Paytable &amp; Rules</summary>
       <div className="ptbody">
         <div className="ptgrid">
           {SYMBOLS.slice().reverse().map((sym) => (
@@ -425,16 +465,17 @@ function Paytable() {
             <Symbol id="scatter" />
             <div>
               <div className="nm">Dopamine — Scatter</div>
-              <div className="pays">4+ anywhere <span>10 free spins</span></div>
+              <div className="pays">4+ anywhere <span>{FS_SPINS} free spins</span></div>
             </div>
           </div>
         </div>
         <div className="rules">
           <p><strong>Pays anywhere.</strong> There are no paylines. Land <strong>8 or more</strong> of the same symbol anywhere on the 6×5 grid and it pays — position is irrelevant. Payouts above are multiples of your <em>total bet</em>, split into three count bands: 8–9, 10–11, and 12+.</p>
           <p><strong>Tumble.</strong> Every winning symbol is removed, everything above it drops down, and fresh symbols fall in from the top. Tumbles repeat for free until no new win forms, and all wins in the sequence add up.</p>
-          <p><strong>Free spins.</strong> Land <strong>4 or more dopamine molecules</strong> (scatter) anywhere to win <strong>10 free spins</strong>. Landing 3+ scatters during the feature retriggers <code>+5</code> spins.</p>
+          <p><strong>Free spins.</strong> Land <strong>4 or more dopamine molecules</strong> (scatter) anywhere to win <strong>{FS_SPINS} free spins</strong>. Landing 3+ scatters during the feature retriggers <code>+5</code> spins.</p>
           <p><strong>Multiplier orbs.</strong> During free spins only, orbs worth <code>2×</code> to <code>100×</code> drop onto the grid. They never pay by themselves and survive every tumble — when the sequence ends, all orb values on screen are <em>added together</em> and applied to that spin's whole win.</p>
-          <p><strong>Double Chance</strong> raises your stake by 25% and doubles the scatter rate. <strong>Buy Free Spins</strong> costs 100× bet; <strong>Super Free Spins</strong> costs 500× and doubles both the frequency and the richness of the orbs.</p>
+          <p><strong>Double Chance</strong> raises your stake by 25% and doubles the scatter rate. <strong>Buy Free Spins</strong> costs {FS_COST}× bet for {FS_SPINS} spins; <strong>Super Free Spins</strong> costs {SUPER_FS_COST}× for {SUPER_FS_SPINS} spins drawn from a far richer orb table. A single spin is capped at <strong>{MAX_WIN_X.toLocaleString()}× bet</strong>.</p>
+          <p><strong>Tip.</strong> Tap the spin button (or space) while the reels are turning to slam them in. Theoretical return is about 84% — this game is built to be a grind.</p>
         </div>
       </div>
     </details>

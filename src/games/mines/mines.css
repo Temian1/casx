@@ -45,6 +45,8 @@
   }
   .mn-main.cash { background: linear-gradient(180deg, #D4FF7A, var(--lime) 60%, #6FB01C); box-shadow: 0 0 22px rgba(184,255,60,.45); }
   .mn-main:hover:not(:disabled) { transform: translateY(-2px); }
+  .mn-main { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
+  .mn-rules > summary { display: flex; align-items: center; gap: 6px; }
   .mn-main:disabled { opacity: .45; cursor: not-allowed; }
 
   .mn-board-wrap { display: flex; flex-direction: column; gap: 10px; }

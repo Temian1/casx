@@ -3,6 +3,7 @@ import { useNavigate } from "react-router-dom";
 import { GAMES } from "../games/registry.jsx";
 import { useStore, money } from "../store/store.js";
 import { ui, resume } from "../audio/synth.js";
+import { Play as PlayIcon, Wallet, X } from "../components/Icons.jsx";
 import "./home.css";
 
 export default function Home() {
@@ -28,7 +29,7 @@ export default function Home() {
           <span className="home-sub">Play-money arcade · no sign-up</span>
         </div>
         <div className="home-wallet">
-          <span className="k">Credit</span>
+          <span className="k"><Wallet size={12} /> Credit</span>
           <span className="v credit">{money(credit)}</span>
         </div>
       </header>
@@ -46,7 +47,7 @@ export default function Home() {
               <div className="cover-title">{g.title}</div>
               <div className="cover-tag">{g.tagline}</div>
             </div>
-            <span className="cover-play">▶ Play</span>
+            <span className="cover-play"><PlayIcon size={12} /> Play</span>
           </button>
         ))}
       </section>
@@ -63,8 +64,8 @@ export default function Home() {
               <p>{pending.blurb}</p>
               <div className="prompt-tags">{pending.tags.map((t) => <span key={t}>{t}</span>)}</div>
               <div className="prompt-actions">
-                <button className="ghost" onClick={() => { ui.click(); setPending(null); }}>Not now</button>
-                <button className="prompt-go" onClick={play} autoFocus>Play {pending.title}</button>
+                <button className="ghost icon" onClick={() => { ui.click(); setPending(null); }}><X size={14} /> Not now</button>
+                <button className="prompt-go" onClick={play} autoFocus><PlayIcon size={14} /> Play {pending.title}</button>
               </div>
             </div>
           </div>

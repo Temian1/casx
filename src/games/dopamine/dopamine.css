@@ -274,3 +274,24 @@
     *,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
   }
 }
+
+/* ---------- reel spin (added in the React port) ---------- */
+@keyframes db-whirl{from{transform:translateY(0)}to{transform:translateY(-50%)}}
+@keyframes db-shake{0%,100%{transform:none}30%{transform:translateY(-2px)}60%{transform:translateY(2px)}}
+.db{
+  .col{position:relative}
+  .col.whirl{overflow:hidden;animation:db-shake .12s linear infinite}
+  .strip{
+    position:absolute;left:0;right:0;top:0;height:280%;
+    display:grid;grid-template-rows:repeat(14,1fr);gap:2px;
+    animation:db-whirl .26s linear infinite;
+    -webkit-mask-image:linear-gradient(180deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+    mask-image:linear-gradient(180deg,transparent 0,#000 6%,#000 94%,transparent 100%);
+  }
+  .strip .cell svg{filter:blur(1.6px) drop-shadow(0 3px 5px rgba(0,0,0,.6));opacity:.85}
+  .spin.reels{border-color:var(--mag);color:var(--mag);box-shadow:0 0 26px rgba(255,45,135,.5)}
+  .spin.busy.reels svg{animation:none}
+  .ghost.icon,.buy b,details.pt>summary{display:inline-flex;align-items:center;gap:6px}
+  details.pt>summary{display:flex}
+  .step{padding:0}
+}

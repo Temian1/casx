@@ -11,3 +11,4 @@
 .play-vol span { font-size: 11px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; color: var(--mute); }
 .play-vol input { width: 90px; }
 .play-loading { text-align: center; padding: 60px 16px; color: var(--mute); letter-spacing: .2em; text-transform: uppercase; font-size: 12px; }
+@media (max-width: 480px) { .play-sound-label { display: none; } .play-vol input { width: 64px; } }

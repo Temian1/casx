@@ -1,0 +1,89 @@
+/* Shared layout for the "originals" games (Dice, Plinko, Blackjack…).
+   A game sets --g1/--g2 for its title gradient and --glow for its accent. */
+@keyframes g-in { from { transform: scale(.85); opacity: 0; } to { transform: none; opacity: 1; } }
+@keyframes g-shake { 0%,100% { transform: none; } 25% { transform: translate(-5px, 2px); } 50% { transform: translate(5px, -2px); } 75% { transform: translate(-3px, 1px); } }
+
+.g { --g1: var(--cy); --g2: var(--lime); --glow: 41,232,222; }
+.g-wrap { max-width: 1040px; margin: 0 auto; padding: 18px 16px 28px; display: flex; flex-direction: column; gap: 14px; }
+.g-logo { text-align: center; line-height: 1; }
+.g-logo h1 {
+  font-family: var(--display); margin: 0; font-size: clamp(28px, 7.4vw, 58px);
+  background: linear-gradient(180deg, #FFF 0%, var(--g1) 45%, var(--g2) 100%);
+  -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 14px rgba(var(--glow), .5)) drop-shadow(0 3px 0 rgba(0,0,0,.6));
+}
+.g-logo .sub { font-size: 11px; letter-spacing: .3em; text-transform: uppercase; color: var(--mute); margin-top: 6px; }
+
+.g-stage { display: grid; grid-template-columns: 260px minmax(0, 1fr); gap: 14px; align-items: start; }
+.g-stage.right { grid-template-columns: minmax(0, 1fr) 260px; }
+@media (max-width: 760px) { .g-stage, .g-stage.right { grid-template-columns: 1fr; } .g-stage .g-panel { order: 2; } }
+
+.g-panel {
+  border: 2px solid var(--edge); border-radius: var(--r);
+  background: linear-gradient(180deg, var(--panel-2), var(--panel));
+  padding: 14px; display: flex; flex-direction: column; gap: 14px;
+}
+.g-field { display: flex; flex-direction: column; gap: 8px; }
+.g-stepper { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.g-stats { display: grid; grid-template-columns: repeat(auto-fit, minmax(70px, 1fr)); gap: 8px; background: #0F0722; border: 1px solid #2B1A4C; border-radius: 10px; padding: 10px; }
+.g-stats .v { font-size: 15px; }
+.g-seg { display: flex; gap: 6px; }
+.g-seg button {
+  flex: 1; border: 2px solid var(--edge); background: var(--panel); color: var(--mute); border-radius: 8px;
+  padding: 7px 0; font-family: var(--mono); font-weight: 700; font-size: 12px; cursor: pointer; text-transform: uppercase; letter-spacing: .06em;
+}
+.g-seg button.on { border-color: var(--g1); color: var(--g1); }
+.g-seg button:disabled { opacity: .4; cursor: not-allowed; }
+.g-input {
+  width: 100%; border: 2px solid var(--edge); background: #0F0722; color: var(--cy); border-radius: 10px;
+  padding: 10px 12px; font-family: var(--mono); font-weight: 700; font-size: 16px;
+}
+.g-input:focus { border-color: var(--cy); outline: none; }
+.g-input:disabled { opacity: .5; }
+
+.g-main {
+  border: 0; border-radius: 12px; padding: 14px; cursor: pointer; font-weight: 800; font-size: 14px;
+  letter-spacing: .08em; text-transform: uppercase; color: #06121A;
+  background: linear-gradient(180deg, color-mix(in srgb, var(--g1) 70%, #fff), var(--g1) 60%, color-mix(in srgb, var(--g1) 60%, #000));
+  box-shadow: 0 0 22px rgba(var(--glow), .4); transition: transform .12s ease;
+  display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+}
+.g-main.alt { background: linear-gradient(180deg, #D4FF7A, var(--lime) 60%, #6FB01C); box-shadow: 0 0 22px rgba(184,255,60,.45); }
+.g-main.danger { background: linear-gradient(180deg, #FF7DB5, var(--mag) 60%, #A8104F); box-shadow: 0 0 22px rgba(255,45,135,.4); color: #1A0710; }
+.g-main:hover:not(:disabled) { transform: translateY(-2px); }
+.g-main:disabled { opacity: .45; cursor: not-allowed; }
+.g-row { display: flex; gap: 8px; }
+.g-row > * { flex: 1; }
+
+.g-screen {
+  position: relative; border-radius: 20px; overflow: hidden;
+  background: linear-gradient(180deg, #160D2B, #0C0719);
+  box-shadow: 0 0 0 2px #120A24, 0 0 24px rgba(var(--glow), .2), inset 0 0 0 2px rgba(255,255,255,.06);
+}
+.g-screen.lost { animation: g-shake .35s ease; }
+.g-flash {
+  position: absolute; inset: 12px; border-radius: 12px; display: grid; place-items: center; text-align: center;
+  background: rgba(7,4,15,.82); backdrop-filter: blur(3px); pointer-events: none; animation: g-in .25s ease-out; z-index: 3;
+}
+.g-flash h2 {
+  font-family: var(--display); margin: 0; font-size: clamp(30px, 7vw, 54px); line-height: 1.06;
+  background: linear-gradient(180deg, #FFF, var(--gold) 55%, var(--mag)); -webkit-background-clip: text; background-clip: text; color: transparent;
+  filter: drop-shadow(0 0 16px rgba(255,198,59,.6));
+}
+.g-flash.lost h2 { background: linear-gradient(180deg, #FFF, var(--mag) 55%, #7A0E3A); -webkit-background-clip: text; background-clip: text; }
+.g-flash p { margin: 8px 0 0; color: var(--cy); font-size: 13px; letter-spacing: .2em; text-transform: uppercase; }
+.g-flash .big { font-family: var(--mono); font-weight: 700; color: var(--lime); font-size: clamp(20px, 5vw, 40px); margin-top: 10px; text-shadow: 0 0 20px rgba(184,255,60,.6); }
+.g-hint { margin: 0; text-align: center; font-size: 12px; color: var(--mute); }
+
+.g-rules { border: 2px solid var(--edge); border-radius: var(--r); background: linear-gradient(180deg, var(--panel-2), var(--panel)); overflow: hidden; }
+.g-rules > summary { cursor: pointer; padding: 12px 14px; list-style: none; font-size: 11px; font-weight: 800; letter-spacing: .16em; text-transform: uppercase; color: var(--cy); display: flex; align-items: center; gap: 6px; }
+.g-rules > summary::-webkit-details-marker { display: none; }
+.g-rules .body { padding: 0 14px 14px; font-size: 12.5px; line-height: 1.6; color: var(--mute); }
+.g-rules strong { color: var(--txt); }
+.g-rules code { font-family: var(--mono); color: var(--cy); }
+
+.g-history { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; min-height: 26px; }
+.g-hist { font-family: var(--mono); font-size: 12px; font-weight: 700; padding: 3px 9px; border-radius: 99px; border: 1px solid; }
+.g-hist.win { color: var(--lime); border-color: rgba(184,255,60,.5); }
+.g-hist.lose { color: var(--mag); border-color: rgba(255,45,135,.5); }
+.g-hist.big { color: var(--gold); border-color: rgba(255,198,59,.6); background: rgba(255,198,59,.1); }

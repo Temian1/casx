@@ -1,0 +1,18 @@
+@keyframes pk-hit { 0% { transform: translateY(0); filter: brightness(1); } 30% { transform: translateY(6px); filter: brightness(1.8); } 100% { transform: none; filter: brightness(1); } }
+
+.pk {
+  .pk-screen { aspect-ratio: 1 / 1; max-height: 78vh; min-height: 320px; }
+  .pk-screen canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+  .pk-buckets { position: absolute; display: flex; gap: 2px; pointer-events: none; }
+  .pk-bucket {
+    flex: 1; min-width: 0; display: grid; place-items: center; border-radius: 6px;
+    font-family: var(--mono); font-weight: 700; font-size: clamp(7px, 1.4vw, 11px); color: #1A0710; letter-spacing: -.02em;
+    box-shadow: inset 0 -3px 0 rgba(0,0,0,.35); overflow: hidden; white-space: nowrap;
+  }
+  .pk-bucket.hot { background: #FF2D87; color: #fff; }
+  .pk-bucket.warm { background: #FF8A1E; }
+  .pk-bucket.even { background: #FFC63B; }
+  .pk-bucket.cold { background: #7A5C1E; color: #FFE9B0; }
+  .pk-bucket.hit { animation: pk-hit .5s ease-out; }
+  @media (max-width: 760px) { .pk-screen { aspect-ratio: 1 / 1.05; } }
+}

@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { store, useStore, money } from "../../store/store.js";
 import { tone, noise, bell, step, resume, ui } from "../../audio/synth.js";
+import { Plus, Minus, Reset, Shuffle, Cash, Play as PlayIcon, Bomb as BombIco, Info } from "../../components/Icons.jsx";
 import "./mines.css";
 
 /* Mines — 5×5 grid. Pick a mine count, place a bet, reveal tiles one
@@ -10,7 +11,7 @@ import "./mines.css";
    probability of surviving those k picks, scaled by the RTP. */
 
 const N = 25;
-const RTP = 0.99;
+const RTP = 0.97;
 const BETS = [0.20, 0.50, 1, 2, 5, 10, 20, 50, 100];
 
 function multiplierFor(mines, picks) {
@@ -140,14 +141,14 @@ export default function Mines() {
             <div className="mn-field">
               <div className="k">Bet</div>
               <div className="mn-stepper">
-                <button className="step" disabled={live || betIndex <= 0} onClick={() => { setBetIndex(betIndex - 1); ui.betTick(false); }} aria-label="Lower bet">−</button>
+                <button className="step" disabled={live || betIndex <= 0} onClick={() => { setBetIndex(betIndex - 1); ui.betTick(false); }} aria-label="Lower bet"><Minus size={16} /></button>
                 <span className="v">{money(bet)}</span>
-                <button className="step" disabled={live || betIndex >= BETS.length - 1} onClick={() => { setBetIndex(betIndex + 1); ui.betTick(true); }} aria-label="Raise bet">+</button>
+                <button className="step" disabled={live || betIndex >= BETS.length - 1} onClick={() => { setBetIndex(betIndex + 1); ui.betTick(true); }} aria-label="Raise bet"><Plus size={16} /></button>
               </div>
             </div>
 
             <div className="mn-field">
-              <div className="k">Mines <span className="mn-count">{mines}</span></div>
+              <div className="k"><BombIco size={12} /> Mines <span className="mn-count">{mines}</span></div>
               <input type="range" min="1" max="24" value={mines} disabled={live}
                 onChange={(e) => { setMines(Number(e.target.value)); }} aria-label="Number of mines" />
               <div className="mn-chips">
@@ -166,17 +167,17 @@ export default function Mines() {
 
             {!live ? (
               <button className="mn-main" onClick={start} disabled={credit < bet}>
-                {over ? "Play Again" : "Start Game"} · {money(bet)}
+                <PlayIcon size={14} /> {over ? "Play Again" : "Start Game"} · {money(bet)}
               </button>
             ) : (
               <>
                 <button className="mn-main cash" onClick={cashOut} disabled={picks === 0}>
-                  Cash Out · {money(cashValue)}
+                  <Cash size={16} /> Cash Out · {money(cashValue)}
                 </button>
-                <button className="ghost" onClick={randomPick}>Random Tile</button>
+                <button className="ghost icon" onClick={randomPick}><Shuffle size={14} /> Random Tile</button>
               </>
             )}
-            <button className="ghost" onClick={() => { if (!live) { store.resetCredit(); ui.click(); } }} disabled={live}>Reset Credit</button>
+            <button className="ghost icon" onClick={() => { if (!live) { store.resetCredit(); ui.click(); } }} disabled={live}><Reset size={14} /> Reset Credit</button>
           </aside>
 
           <div className="mn-board-wrap">
@@ -216,9 +217,9 @@ export default function Mines() {
         </div>
 
         <details className="mn-rules">
-          <summary>How it works</summary>
+          <summary><Info size={13} /> How it works</summary>
           <div className="body">
-            <p>25 tiles hide <strong>{mines}</strong> mine{mines > 1 ? "s" : ""}. Each safe tile you reveal multiplies your bet — the multiplier is the true odds of surviving that many picks, paid at <strong>99% RTP</strong>. You can cash out after any safe pick. Reveal every gem and the game cashes out automatically.</p>
+            <p>25 tiles hide <strong>{mines}</strong> mine{mines > 1 ? "s" : ""}. Each safe tile you reveal multiplies your bet — the multiplier is the true odds of surviving that many picks, paid at <strong>97% RTP</strong>. You can cash out after any safe pick. Reveal every gem and the game cashes out automatically.</p>
             <p>Example with 3 mines: 1 pick pays <code>{multiplierFor(3, 1).toFixed(2)}×</code>, 5 picks <code>{multiplierFor(3, 5).toFixed(2)}×</code>, 10 picks <code>{multiplierFor(3, 10).toFixed(2)}×</code>, all 22 gems <code>{multiplierFor(3, 22).toFixed(2)}×</code>.</p>
           </div>
         </details>

@@ -49,6 +49,8 @@ button { font-family: inherit; }
 .ghost:hover:not(:disabled) { border-color: var(--cy); color: var(--cy); }
 .ghost[aria-pressed="true"] { border-color: var(--mag); color: var(--mag); }
 .ghost:disabled { opacity: .4; cursor: not-allowed; }
+.ghost.icon, .k, .cover-play, .prompt-go, .play-back, .play-name { display: inline-flex; align-items: center; gap: 6px; }
+.step { padding: 0; }
 
 .step {
   width: 34px; height: 34px; border-radius: 50%; border: 2px solid var(--edge);
