@@ -1,6 +1,6 @@
 import { lazy } from "react";
 import { DopamineCover, MinesCover, CrashCover } from "../components/Covers.jsx";
-import { DiceCover, PlinkoCover, BlackjackCover } from "../components/CoversMore.jsx";
+import { DiceCover, PlinkoCover, BlackjackCover, MatkaCover } from "../components/CoversMore.jsx";
 import SlotCover from "../components/SlotCover.jsx";
 import { cfg as neonFruits } from "./slots/games/neonFruits.config.js";
 import { cfg as pharaohsVault } from "./slots/games/pharaohsVault.config.js";
@@ -79,6 +79,16 @@ export const GAMES = [
     accent: "#B8FF3C",
     Cover: BlackjackCover,
     component: lazy(() => import("./blackjack/Blackjack.jsx")),
+  },
+  {
+    id: "number-matka",
+    title: "Number Matka",
+    tagline: "Ank · Jodi · Panna · Sangam",
+    blurb: "The Indian matka format: three cards make the open panna and its ank, three more the close, and the two anks form the jodi. Build a slip of bets — ank at 9×, jodi at 90×, pannas to 700×, full sangam at 10,000×.",
+    tags: ["Lottery", "Bet slip", "Up to 10,000×"],
+    accent: "#FFC63B",
+    Cover: MatkaCover,
+    component: lazy(() => import("./matka/Matka.jsx")),
   },
 ];
 

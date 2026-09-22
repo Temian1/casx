@@ -13,6 +13,7 @@ Play-money arcade built with React + Vite. No login, no deposits — credits are
 | **Pirate Gold** | 5×4, 25 lines | ≈ 86% | Skull wilds stick for the whole feature; ships → 8 free spins (+2 per extra ship). Buy 45×. |
 | **Dragon Fortune** | 5×3, 243 ways | ≈ 85% | Pearls → 10 free spins with a multiplier that rises after every winning spin. Buy 30×. |
 | **Hold & Win** | 5×3, 20 lines | ≈ 80% | Coins carry 1×–50× or Mini/Minor/Major; 6+ coins lock and respin, fill all 15 for the 1,000× Grand. |
+| **Number Matka** | Indian matka lottery | 90% on ank/jodi | Three cards make the open panna and its ank, three more the close; the two anks form the jodi. Bet slip of ank (9×), jodi (90×), single/double/triple panna (140/280/700×), half sangam (1,400–7,000×) and full sangam (10,000×). Per-market panel chart. |
 | **Mines** | 5×5 grid | 97% | Choose 1–24 mines. Multiplier = true survival odds × RTP. Cash out after any safe pick; revealing every gem auto-cashes. |
 | **Crash** | Curve + plane | 97% | Crash point drawn from `0.97 / (1 − u)` (3% instant). An airliner flies the live curve and flies away on crash. Manual or auto cash-out, round history. |
 | **Dice** | Over / under | 96% | Target 2–98, roll 0.00–99.99. Payout = RTP ÷ win chance (up to 48×). |
@@ -27,6 +28,7 @@ Every stake and payout goes through `store.debit(game, amount, note)` / `store.p
 
 The six slots above are configs for one engine: [src/games/slots/engine.js](src/games/slots/engine.js) (pure maths → list of presentation steps) and [SlotMachine.jsx](src/games/slots/SlotMachine.jsx) (plays the steps). A slot is a `*.config.js` with symbols (weights, pays, inline SVG art), mode (`lines` / `ways` / `scatter`), and optional `freeSpins` (multiplier, expanding symbol, sticky wilds, progressive multiplier, retriggers, buy price), `tumble` + `bombs`, or `holdWin`. Covers are generated from the config by `SlotCover`.
 
+- `node sim-matka.mjs [draws]` — verifies every matka bet type's empirical return against theory.
 - `node sim-slots.mjs [id] [spins]` — Monte Carlo RTP / hit rate / feature frequency for every slot.
 - `node tune-slots.mjs <file> <rtp%>` — rescales a slot's paytable to a target return.
 - `?force=hold` / `?force=feature` on a slot URL forces the feature on the next spin (test hook).
@@ -60,6 +62,7 @@ src/
   games/dice/             Dice.jsx
   games/plinko/           Plinko.jsx (canvas pegboard)
   games/blackjack/        Blackjack.jsx
+  games/matka/            engine.js (pannas, anks, rates) · Matka.jsx
   games/slots/            engine.js · SlotMachine.jsx · art.js · sfx.js · games/*.config.js
   pages/History.jsx       ledger view (earnings, per-game totals, recent activity)
   components/Icons.jsx    shared inline SVG icon set used by every button

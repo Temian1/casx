@@ -89,3 +89,35 @@ export function BlackjackCover() {
     </svg>
   );
 }
+
+export function MatkaCover() {
+  const card = (x, y, rot, face, suit, red) => (
+    <g key={x} transform={`translate(${x} ${y}) rotate(${rot})`}>
+      <rect width="62" height="88" rx="7" fill="#FBF7FF" stroke="#C9BFE6" strokeWidth="2" />
+      <text x="8" y="22" fontFamily="Archivo, sans-serif" fontWeight="800" fontSize="18" fill={red ? "#E0245E" : "#1B1436"}>{face}</text>
+      <text x="31" y="62" textAnchor="middle" fontFamily="Arial, sans-serif" fontSize="32" fill={red ? "#E0245E" : "#1B1436"}>{suit}</text>
+    </g>
+  );
+  return (
+    <svg viewBox="0 0 300 400" role="img" aria-label="Number Matka cover">
+      <defs>
+        <radialGradient id="mkbg" cx="50%" cy="28%" r="85%"><stop offset="0" stopColor="#6A3A0E" /><stop offset="0.6" stopColor="#2A1408" /><stop offset="1" stopColor="#07040F" /></radialGradient>
+        <linearGradient id="mktg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stopColor="#FFF" /><stop offset="0.45" stopColor="#FFC63B" /><stop offset="1" stopColor="#FF2D87" /></linearGradient>
+        <linearGradient id="mkpot" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#C97A3A" /><stop offset="0.5" stopColor="#8A4A1E" /><stop offset="1" stopColor="#4A2410" /></linearGradient>
+      </defs>
+      <rect width="300" height="400" fill="url(#mkbg)" />
+      <circle cx="150" cy="150" r="118" fill="rgba(255,198,59,.07)" />
+      {[card(40, 44, -15, "3", "♠", false), card(112, 30, 0, "6", "♥", true), card(184, 44, 15, "9", "♣", false)]}
+      <g transform="translate(150 232)">
+        <ellipse cx="0" cy="-34" rx="26" ry="8" fill="#3A1C0C" />
+        <path d="M-26-34c0 8-22 14-22 36 0 24 22 36 48 36s48-12 48-36c0-22-22-28-22-36z" fill="url(#mkpot)" stroke="#2A1005" strokeWidth="2.5" />
+        <ellipse cx="0" cy="-34" rx="20" ry="6" fill="#1A0C05" />
+        <text x="0" y="16" textAnchor="middle" fontFamily="Bungee, Impact, sans-serif" fontSize="26" fill="#FFC63B">18</text>
+      </g>
+      <text x="150" y="300" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontWeight="700" fontSize="15" fill="#B8FF3C" letterSpacing="2">369-8</text>
+      <text x="150" y="342" textAnchor="middle" fontFamily="Bungee, Impact, sans-serif" fontSize="34" fill="url(#mktg)" style={{ paintOrder: "stroke", stroke: "rgba(0,0,0,.55)", strokeWidth: 6 }}>NUMBER MATKA</text>
+      <text x="150" y="366" textAnchor="middle" fontFamily="Archivo, sans-serif" fontSize="10" letterSpacing="3" fill="#29E8DE">ANK · JODI · PANNA · SANGAM</text>
+      <text x="150" y="388" textAnchor="middle" fontFamily="IBM Plex Mono, monospace" fontSize="12" fontWeight="700" fill="#FFC63B">up to 10,000×</text>
+    </svg>
+  );
+}
