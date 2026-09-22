@@ -21,6 +21,7 @@ export const SYM_BY_ID = Object.fromEntries(SYMBOLS.map((s) => [s.id, s]));
 export const COLS = 6, ROWS = 5;
 export const BETS = [0.20, 0.40, 0.60, 0.80, 1.00, 2.00, 4.00, 6.00, 10.00, 20.00, 50.00, 100.00];
 export const MAX_WIN_X = 5000; /* cap on a single spin, in bets */
+export const MAX_ORB_X = 100;
 
 /* Multiplier orb value tables (value, relative weight). Super free spins
    use the richer table — bigger orbs land far more often. */

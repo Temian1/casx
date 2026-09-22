@@ -7,6 +7,8 @@ import cash from "../../assets/dopamine/9.png";
 import ferrari from "../../assets/dopamine/14.png";
 import dom from "../../assets/dopamine/20.png";
 import scatter from "../../assets/dopamine/23.png";
+import multiplier from "../../assets/dopamine/24.png";
+import maxMultiplier from "../../assets/dopamine/25.png";
 
 /* Supplied artwork from “Dopamine Bonanza by Rolls.gg.zip”, mapped to the
    matching symbol ids used by the game engine. */
@@ -24,4 +26,8 @@ export const SYMBOL_IMAGES = {
 
 export function symbolImage(id) {
   return SYMBOL_IMAGES[id] || "";
+}
+
+export function multiplierImage(isMax) {
+  return isMax ? maxMultiplier : multiplier;
 }

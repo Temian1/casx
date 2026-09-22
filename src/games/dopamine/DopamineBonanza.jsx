@@ -1,9 +1,9 @@
 import { useEffect, useReducer, useRef, useCallback } from "react";
 import { wallet, useStore, money } from "../../store/store.js";
 import SFX from "./sfx.js";
-import { symbolImage } from "./art.js";
+import { multiplierImage, symbolImage } from "./art.js";
 import {
-  SYMBOLS, SCATTER, MULT_ID, COLS, ROWS, BETS, MAX_WIN_X,
+  SYMBOLS, SCATTER, MULT_ID, COLS, ROWS, BETS, MAX_WIN_X, MAX_ORB_X,
   ORB_CHANCE, SUPER_ORB_CHANCE, FS_SPINS, SUPER_FS_SPINS, FS_COST, SUPER_FS_COST,
   buildStrip, newGrid, clearFresh, evaluate, countScatters, sumOrbs, tumble, pickOrb, winTier, pick,
 } from "./engine.js";
@@ -429,7 +429,7 @@ function Grid({ st }) {
             return (
               <div className={cls} key={k + "-" + (cell.born || 0)}
                 style={isDrop ? { animationDelay: (ROWS - 1 - r) * 36 + "ms" } : undefined}>
-                {cell.m ? <div className="orb">{cell.m}×</div> : <Symbol id={cell.s} />}
+                {cell.m ? <Multiplier value={cell.m} /> : <Symbol id={cell.s} />}
               </div>
             );
           })}
@@ -441,6 +441,16 @@ function Grid({ st }) {
 
 function Symbol({ id }) {
   return <img src={symbolImage(id)} alt="" draggable="false" />;
+}
+
+function Multiplier({ value, preview = false }) {
+  const isMax = value === MAX_ORB_X;
+  return (
+    <div className={(preview ? "pt-mult" : "orb") + (isMax ? " max" : "")}>
+      <img src={multiplierImage(isMax)} alt="" draggable="false" />
+      <span>{value}×</span>
+    </div>
+  );
 }
 
 function Paytable() {
@@ -465,6 +475,20 @@ function Paytable() {
             <div>
               <div className="nm">Dopamine — Scatter</div>
               <div className="pays">4+ anywhere <span>{FS_SPINS} free spins</span></div>
+            </div>
+          </div>
+          <div className="ptrow">
+            <Multiplier value={10} preview />
+            <div>
+              <div className="nm">Multiplier</div>
+              <div className="pays">Blue diamond <span>2×–50×</span></div>
+            </div>
+          </div>
+          <div className="ptrow">
+            <Multiplier value={MAX_ORB_X} preview />
+            <div>
+              <div className="nm">Max Multiplier</div>
+              <div className="pays">Yellow diamond <span>{MAX_ORB_X}×</span></div>
             </div>
           </div>
         </div>
