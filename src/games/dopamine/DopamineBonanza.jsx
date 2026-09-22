@@ -1,7 +1,7 @@
-import { useEffect, useReducer, useRef, useCallback, useMemo } from "react";
+import { useEffect, useReducer, useRef, useCallback } from "react";
 import { wallet, useStore, money } from "../../store/store.js";
 import SFX from "./sfx.js";
-import { renderSymbol } from "./art.js";
+import { symbolImage } from "./art.js";
 import {
   SYMBOLS, SCATTER, MULT_ID, COLS, ROWS, BETS, MAX_WIN_X,
   ORB_CHANCE, SUPER_ORB_CHANCE, FS_SPINS, SUPER_FS_SPINS, FS_COST, SUPER_FS_COST,
@@ -440,8 +440,7 @@ function Grid({ st }) {
 }
 
 function Symbol({ id }) {
-  const html = useMemo(() => renderSymbol(id), [id]);
-  return <span style={{ display: "contents" }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <img src={symbolImage(id)} alt="" draggable="false" />;
 }
 
 function Paytable() {

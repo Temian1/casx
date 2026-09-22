@@ -108,7 +108,7 @@ export default function Blackjack() {
   async function double() {
     if (!canDouble) return;
     resume();
-    if (!W.debit(stake, "double")) return;
+    if (!W.debit(stake, "double", false)) return;
     SFX.chip();
     const total = stake * 2;
     setStake(total);

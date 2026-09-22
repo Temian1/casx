@@ -1,13 +1,22 @@
 import { useSyncExternalStore } from "react";
 
-/* Tiny external store: shared play-money wallet, sound settings and the
-   play ledger. Persisted to localStorage so credits and history survive
-   between games / reloads. No accounts, no login — everything is local. */
+/* Shared play-money wallet, sound settings and play ledger. Persisted to
+   localStorage so credits, totals, and recent activity survive reloads. */
 
 const KEY = "casx.v1";
 const LEDGER_KEY = "casx.ledger.v1";
 const DEFAULTS = { credit: 1000, sound: true, volume: 0.7 };
-const MAX_ENTRIES = 600;
+const MAX_ENTRIES = 750;
+const EMPTY_GAME = {
+  wagered: 0,
+  won: 0,
+  rounds: 0,
+  wins: 0,
+  biggest: 0,
+  roundStake: 0,
+  roundPayout: 0,
+  roundWon: false,
+};
 
 function load(key, fallback) {
   try {
@@ -20,11 +29,25 @@ function load(key, fallback) {
 }
 
 let state = load(KEY, () => ({ ...DEFAULTS }));
-/* ledger: { entries:[{id,ts,game,type,amount,balance,note}], games:{[id]:{wagered,won,rounds,biggest}} } */
+/* ledger: { entries:[{id,ts,game,type,amount,balance,note}], games:{[id]:stats} } */
 let ledger = load(LEDGER_KEY, () => ({ entries: [], games: {}, seq: 0 }));
 
+/* Add win counts to ledgers created before this field existed. Recent
+   entries provide the best available migration without discarding totals. */
+for (const [gameId, game] of Object.entries(ledger.games)) {
+  if (Number.isFinite(game.wins)) continue;
+  const recordedWins = ledger.entries.filter((entry) => entry.game === gameId && entry.type === "win").length;
+  ledger.games[gameId] = {
+    ...game,
+    wins: Math.min(game.rounds || 0, recordedWins),
+    roundWon: ledger.entries.find((entry) => entry.game === gameId)?.type === "win",
+    roundStake: 0,
+    roundPayout: 0,
+  };
+}
+
 const listeners = new Set();
-function emit() { listeners.forEach((l) => l()); }
+function emit() { listeners.forEach((listener) => listener()); }
 function persist() {
   try { localStorage.setItem(KEY, JSON.stringify(state)); } catch { /* ignore */ }
 }
@@ -39,37 +62,70 @@ function set(patch) {
   emit();
 }
 
-function record(game, type, amount, note) {
-  const g = ledger.games[game] || { wagered: 0, won: 0, rounds: 0, biggest: 0 };
-  if (type === "bet") { g.wagered = r2(g.wagered + amount); g.rounds++; }
-  if (type === "win") { g.won = r2(g.won + amount); if (amount > g.biggest) g.biggest = amount; }
-  const entry = { id: ++ledger.seq, ts: Date.now(), game, type, amount: r2(amount), balance: state.credit, note: note || "" };
-  ledger = { ...ledger, games: { ...ledger.games, [game]: g }, entries: [entry, ...ledger.entries].slice(0, MAX_ENTRIES) };
+function record(game, type, amount, note, countRound = true) {
+  const g = { ...EMPTY_GAME, ...ledger.games[game] };
+  if (type === "bet") {
+    g.wagered = r2(g.wagered + amount);
+    if (countRound) {
+      g.rounds++;
+      g.roundStake = amount;
+      g.roundPayout = 0;
+      g.roundWon = false;
+    } else {
+      g.roundStake = r2(g.roundStake + amount);
+    }
+  }
+  if (type === "win") {
+    g.won = r2(g.won + amount);
+    g.roundPayout = r2(g.roundPayout + amount);
+    g.biggest = Math.max(g.biggest, g.roundPayout);
+    if (!g.roundWon && g.roundPayout > g.roundStake + 1e-9) {
+      g.wins++;
+      g.roundWon = true;
+    }
+  }
+  const entry = {
+    id: ++ledger.seq,
+    ts: Date.now(),
+    game,
+    type,
+    amount: r2(amount),
+    balance: state.credit,
+    note: note || "",
+  };
+  ledger = {
+    ...ledger,
+    games: { ...ledger.games, [game]: g },
+    entries: [entry, ...ledger.entries].slice(0, MAX_ENTRIES),
+  };
   persistLedger();
+}
+
+function withDerived(game) {
+  const g = { ...EMPTY_GAME, ...game };
+  return { ...g, losses: Math.max(0, g.rounds - g.wins), net: r2(g.won - g.wagered) };
 }
 
 export const store = {
   get: () => state,
   set,
-  subscribe(l) { listeners.add(l); return () => listeners.delete(l); },
+  subscribe(listener) { listeners.add(listener); return () => listeners.delete(listener); },
   credit: () => state.credit,
   soundOn: () => state.sound,
   setSound: (on) => set({ sound: !!on }),
   setVolume: (v) => set({ volume: Math.min(1, Math.max(0, v)) }),
 
-  /* ---- accounting: every stake and payout goes through here ---- */
-  /** Take a stake from the wallet. Returns false (and does nothing) if it can't be covered. */
-  debit(game, amount, note) {
+  /* Every stake and payout goes through these two methods. */
+  debit(game, amount, note, countRound = true) {
     amount = r2(amount);
     if (amount <= 0) return true;
     if (state.credit < amount - 1e-9) return false;
     state = { ...state, credit: r2(state.credit - amount) };
     persist();
-    record(game, "bet", amount, note);
+    record(game, "bet", amount, note, countRound);
     emit();
     return true;
   },
-  /** Pay a win (or return a stake) to the wallet. */
   payout(game, amount, note) {
     amount = r2(amount);
     if (amount <= 0) return;
@@ -85,13 +141,23 @@ export const store = {
     emit();
   },
 
-  /* ---- ledger reads ---- */
   ledger: () => ledger,
-  gameStats: (game) => ledger.games[game] || { wagered: 0, won: 0, rounds: 0, biggest: 0 },
+  gameStats: (game) => withDerived(ledger.games[game]),
   totals() {
-    let wagered = 0, won = 0, rounds = 0;
-    for (const g of Object.values(ledger.games)) { wagered += g.wagered; won += g.won; rounds += g.rounds; }
-    return { wagered: r2(wagered), won: r2(won), net: r2(won - wagered), rounds };
+    const totals = { wagered: 0, won: 0, net: 0, rounds: 0, wins: 0, losses: 0, biggest: 0 };
+    for (const raw of Object.values(ledger.games)) {
+      const game = withDerived(raw);
+      totals.wagered += game.wagered;
+      totals.won += game.won;
+      totals.rounds += game.rounds;
+      totals.wins += game.wins;
+      totals.losses += game.losses;
+      totals.biggest = Math.max(totals.biggest, game.biggest);
+    }
+    totals.wagered = r2(totals.wagered);
+    totals.won = r2(totals.won);
+    totals.net = r2(totals.won - totals.wagered);
+    return totals;
   },
   clearHistory() {
     ledger = { entries: [], games: {}, seq: 0 };
@@ -105,7 +171,7 @@ export function wallet(game) {
   return {
     id: game,
     credit: () => state.credit,
-    debit: (amount, note) => store.debit(game, amount, note),
+    debit: (amount, note, countRound = true) => store.debit(game, amount, note, countRound),
     payout: (amount, note) => store.payout(game, amount, note),
     reset: () => store.resetCredit(game),
     stats: () => store.gameStats(game),

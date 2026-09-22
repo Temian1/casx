@@ -22,7 +22,7 @@ export default function History() {
   const [filter, setFilter] = useState("all");
   const [confirm, setConfirm] = useState(false);
   const totals = store.totals();
-  const games = Object.entries(ledger.games).map(([id, g]) => ({ id, ...g, net: Math.round((g.won - g.wagered) * 100) / 100 }))
+  const games = Object.keys(ledger.games).map((id) => ({ id, ...store.gameStats(id) }))
     .sort((a, b) => b.wagered - a.wagered);
   const entries = ledger.entries.filter((e) => filter === "all" || e.game === filter).slice(0, 200);
 
@@ -37,6 +37,9 @@ export default function History() {
           <div className="hs-card"><div className="k"><Wallet size={12} /> Credit</div><div className="v credit">{money(credit)}</div></div>
           <div className="hs-card"><div className="k">Wagered</div><div className="v">{money(totals.wagered)}</div></div>
           <div className="hs-card"><div className="k">Won</div><div className="v gold">{money(totals.won)}</div></div>
+          <div className="hs-card"><div className="k">Games played</div><div className="v">{totals.rounds.toLocaleString()}</div></div>
+          <div className="hs-card"><div className="k">Win / loss</div><div className="v"><span className="up">{totals.wins}W</span> / <span className="down">{totals.losses}L</span></div></div>
+          <div className="hs-card"><div className="k"><Trophy size={12} /> Biggest win</div><div className="v gold">{money(totals.biggest)}</div></div>
           <div className={"hs-card net " + (totals.net >= 0 ? "up" : "down")}>
             <div className="k"><Trophy size={12} /> Earnings</div>
             <div className="v">{(totals.net >= 0 ? "+" : "−") + money(Math.abs(totals.net))}</div>
@@ -48,11 +51,12 @@ export default function History() {
           <h2>By game</h2>
           {games.length === 0 ? <p className="g-hint">Play something and it shows up here.</p> : (
             <div className="hs-table">
-              <div className="hs-row head"><span>Game</span><span>Rounds</span><span>Wagered</span><span>Won</span><span>Biggest</span><span>Net</span></div>
+              <div className="hs-row head"><span>Game</span><span>Rounds</span><span>W / L</span><span>Wagered</span><span>Won</span><span>Biggest</span><span>Net</span></div>
               {games.map((g) => (
                 <div className="hs-row" key={g.id}>
                   <span className="hs-game"><Link to={"/play/" + g.id}>{titleOf(g.id)}</Link></span>
                   <span>{g.rounds}</span>
+                  <span><span className="up">{g.wins}</span> / <span className="down">{g.losses}</span></span>
                   <span>{money(g.wagered)}</span>
                   <span>{money(g.won)}</span>
                   <span className="gold">{money(g.biggest)}</span>
